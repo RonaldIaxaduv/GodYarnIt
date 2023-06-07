@@ -1,0 +1,70 @@
+[gd_scene load_steps=2 format=3 uid="uid://okwchfx8jmwk"]
+
+[ext_resource type="Script" path="res://addons/godyarnit/ui/CompileUi.gd" id="1_fdpe7"]
+
+[node name="CompileUi" type="VBoxContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+size_flags_horizontal = 3
+size_flags_vertical = 0
+script = ExtResource("1_fdpe7")
+CompileButton = NodePath("VBoxContainer/CompilationContainer/CompileButton")
+ShowTokensCheckBox = NodePath("VBoxContainer/CompilationContainer/ShowTokens/ShowTokensCheckBox")
+PrintTreeCheckBox = NodePath("VBoxContainer/CompilationContainer/PrintTree/PrintTreeCheckBox")
+OpenDialog = NodePath("VBoxContainer/OpenDialog")
+Dialog = NodePath("VBoxContainer/PopupDialog")
+TestButton = NodePath("VBoxContainer/PopupDialog/TestButton")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="CompilationContainer" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="CompileButton" type="Button" parent="VBoxContainer/CompilationContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+focus_mode = 0
+text = "COMPILE!"
+
+[node name="ShowTokens" type="VBoxContainer" parent="VBoxContainer/CompilationContainer"]
+layout_mode = 2
+size_flags_vertical = 0
+
+[node name="Label" type="Label" parent="VBoxContainer/CompilationContainer/ShowTokens"]
+layout_mode = 2
+size_flags_vertical = 0
+text = "tokens"
+
+[node name="ShowTokensCheckBox" type="CheckBox" parent="VBoxContainer/CompilationContainer/ShowTokens"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="PrintTree" type="VBoxContainer" parent="VBoxContainer/CompilationContainer"]
+layout_mode = 2
+size_flags_vertical = 0
+
+[node name="Label" type="Label" parent="VBoxContainer/CompilationContainer/PrintTree"]
+layout_mode = 2
+size_flags_vertical = 0
+text = "tree"
+
+[node name="PrintTreeCheckBox" type="CheckBox" parent="VBoxContainer/CompilationContainer/PrintTree"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="OpenDialog" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+text = "openDialog"
+
+[node name="PopupDialog" type="PopupPanel" parent="VBoxContainer"]
+visible = true
+
+[node name="TestButton" type="Button" parent="VBoxContainer/PopupDialog"]
+offset_left = 4.0
+offset_top = 4.0
+offset_right = 96.0
+offset_bottom = 96.0
+text = "Close"

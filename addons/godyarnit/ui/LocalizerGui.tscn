@@ -1,0 +1,83 @@
+[gd_scene load_steps=2 format=3 uid="uid://damqkj3inubee"]
+
+[ext_resource type="Script" path="res://addons/godyarnit/ui/LocalizerGui.gd" id="1_32bg8"]
+
+[node name="LocalizerGui" type="AcceptDialog"]
+title = "GodYarnIt Localiser GUI"
+size = Vector2i(254, 161)
+visible = true
+script = ExtResource("1_32bg8")
+LocalizationList = NodePath("Vmain/BottomHalf/LocalizationOptions/LocalizationList")
+LocaleAbbrevLabel = NodePath("Vmain/BottomHalf/LocalizationOptions/LocaleAbbrevLabel")
+
+[node name="Vmain" type="VBoxContainer" parent="."]
+offset_left = 8.0
+offset_top = 8.0
+offset_right = 246.0
+offset_bottom = 112.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="Heading" type="HBoxContainer" parent="Vmain"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="Label" type="Label" parent="Vmain/Heading"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 7
+text = "Test"
+
+[node name="OriginalFile" type="HBoxContainer" parent="Vmain"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Vmain/OriginalFile"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Original File:"
+
+[node name="LineEdit" type="LineEdit" parent="Vmain/OriginalFile"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 3.33
+caret_blink = true
+caret_blink_interval = 0.5
+
+[node name="Button" type="Button" parent="Vmain/OriginalFile"]
+layout_mode = 2
+size_flags_horizontal = 2
+text = "Browse"
+
+[node name="HSeparator" type="HSeparator" parent="Vmain"]
+layout_mode = 2
+size_flags_vertical = 3
+size_flags_stretch_ratio = 0.39
+
+[node name="BottomHalf" type="VBoxContainer" parent="Vmain"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+size_flags_stretch_ratio = 4.0
+
+[node name="LocalizationOptions" type="HBoxContainer" parent="Vmain/BottomHalf"]
+layout_mode = 2
+
+[node name="Control" type="Control" parent="Vmain/BottomHalf/LocalizationOptions"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 0.84
+
+[node name="LocalizationList" type="OptionButton" parent="Vmain/BottomHalf/LocalizationOptions"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="LocaleAbbrevLabel" type="Label" parent="Vmain/BottomHalf/LocalizationOptions"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="AddLocalization" type="Button" parent="Vmain/BottomHalf/LocalizationOptions"]
+layout_mode = 2
+size_flags_horizontal = 2
+size_flags_stretch_ratio = 1.6
+text = "+ Localization"

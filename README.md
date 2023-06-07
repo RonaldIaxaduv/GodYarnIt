@@ -4,9 +4,8 @@
 1.  [Introduction](#Introduction)
 2.  [Features](#Features)
 3.  [Installation](#Installation)
-        1.  [Install from AssetLib](#org641f555)
-        2.  [Install from GitHub](#org85185b1)
-        3.  [After Install](#org7865e93)
+	1.  [Install from GitHub](#org641f555)
+	2.  [After Install](#org7865e93)
 4.  [Quickstart](#Quickstart)
     1.  [Complete Beginner to YarnSpinner?](#orgb593371)
     2.  [How to create Yarn files?](#orge11a839)
@@ -22,9 +21,13 @@
 
 # Introduction
 
-GD Yarn is a [Godot](https://godotengine.org/) plugin that allows you to create interactive dialogues using a simple markup language with strong similarities to [twine](https://twinery.org/). It is easy enough to get, but powerful enough to take your games to the next level with branching narratives that can change based on user interactions.
+**GodYarnIt** is a port of [Kyperbelt's GDYarn](https://github.com/kyperbelt/GDYarn) to **[Godot](https://godotengine.org/) 4**. It allows you to create interactive dialogues using a simple markup language with strong similarities to [twine](https://twinery.org/). It is easy enough to get, but powerful enough to take your games to the next level with branching narratives that can change based on user interactions.
 
-GD Yarn is an implementation of [YarnSpinner](https://yarnspinner.dev) completely written in [GDScript](https://docs.godotengine.org/en/stable/getting_started/scripting/gdscript/gdscript_basics.html). The project aims to be as feature complete as possible compared to the c# version but may forgo certain things in lieu of similar alternatives that make it blend better with the Godot ecosystem.
+GodYarnIt, like GDYarn, is a **reconstruction of [YarnSpinner](https://yarnspinner.dev)** completely written in [GDScript](https://docs.godotengine.org/en/stable/getting_started/scripting/gdscript/gdscript_basics.html). The project aims to be as feature complete as possible compared to the C# version but may forgo certain things in lieu of similar alternatives that make it blend better with the Godot ecosystem.
+
+This port not only includes code fixes (GDScript saw many changes in Godot 4), but also major code documentation as well as some re-naming done to some classes, methods and variables.
+When I began working on the port, I noticed that there are some bugs that needed me to dig deeper into the code (especially the one where the wait command doesn't work correctly, as also pointed out in [BreadcrumpIsTaken's fork](https://github.com/BreadcrumbIsTaken/GDYarn) - that one's fixed on here btw). This was a huge hassle, however, because the original code wasn't well-documented, didn't always stick to the [GDScript Style Guide](https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/gdscript_styleguide.html) and often didn't use any type-hints or insightful and consistent class/method/variable names.
+Hence, I decided to go the long way and **gave the code a big face-lift and extensive documentation**. While I don't know for sure whether I will keep working on this repository long-term, the main goal of this fork (besides making it functional for Godot 4) is to **make the original code more intuitive to use** so that if Kyperbelt or anyone else wants to expand on it further, they don't need to spend weeks trying to understand every script to fix a bug or implement a new feature.
 
 ![Exmaple of Running a Dialogue](https://raw.githubusercontent.com/kyperbelt/GDYarn/main/images/yarn_running_dialogue.gif)
 
@@ -32,18 +35,21 @@ GD Yarn is an implementation of [YarnSpinner](https://yarnspinner.dev) completel
 
 # Features
 
+-   [x] Compatibility with Godot 4 (incl. port bug fixes)
 -   [X] Compile multiple Yarn files into a single Program
--   [X] Inline Expression
--   [X] Format Functions
+-   [X] Inline Expressions `{3 \* $variable + foo()}`
+-   [X] Format Functions `[func {$value} ...]` (select, plural, ordinal)
 -   [X] Pluralisation
 -   [ ] Persistent Variable Storage (currently can only be done manually)
--   [ ] Custom Commands (partial implementation complete)
--   [ ] Library Extensions (coming soon)
--   [X] Option Links
--   [X] Shortcut Options
--   [ ] Localization (coming soon)
--   [X] IF/ELSE Statements
--   [X] support for bbcode (**must use RichTextLabel**)
+-   [ ] Custom Commands (implemented already, but cumbersome to use)
+-   [ ] Function Library Extensions (WIP)
+-   [X] Option Links `[[OptionalText | TargetNode]]` (deprecated for Yarn 2.0, might be removed)
+-   [X] Shortcut Options `->`
+-   [ ] Localisation (WIP)
+-   [X] if/elseif/else Statements `<<if ...>>`
+-   [X] support for BBCode `[b]bold[/b]` (**must use RichTextLabel**)
+-   [ ] Header info processing
+-   [ ] Yarn 2.0 Functionalities like jumps `<<jump TargetNode>>` or variable declarations `<<declare $value = true as bool>>`
 
 
 <a id="Installation"></a>
@@ -53,24 +59,20 @@ GD Yarn is an implementation of [YarnSpinner](https://yarnspinner.dev) completel
 
 <a id="org641f555"></a>
 
-### Install from AssetLib
+## Install from GitHub
 
-You can install GDYarn straight from the Godot AssetLib tab. Only the contents of the addons directory are required in order to use the addon, but you can use the rest of the items in the project as references and examples.
+Go to the folder where you want to download this project to and clone it using your preferred method.
 
-
-<a id="org85185b1"></a>
-
-### Install from GitHub
-
-Go to the folder where you want to download this project to and cloning it using your preferred method.
-For more information regarding this process checkout the official [Godot Documentation](https://docs.godotengine.org/en/stable/tutorials/plugins/editor/installing_plugins.html) regarding addon installation.
+For more information regarding this process checkout the official [Godot Documentation](https://docs.godotengine.org/en/stable/tutorials/plugins/editor/installing_plugins.html) regarding plugin installation.
 
 
 <a id="org7865e93"></a>
 
-### After Install
+## After Install
 
-Make sure to enable the addon by going to `Project Tab -> Project Settings -> Plugins`.
+Make sure the plugin directory is located in `res://addons/` (case-sensitive). If not, you will need to adjust dozens of file paths (`Ctrl+Shift+F`, search GodYarnIt's directory, replace all affected paths).
+
+Enable the plugin by going to `Project Tab -> Project Settings -> Plugins` and ticking GodYarnIt's checkbox.
 
 
 <a id="Quickstart"></a>
@@ -83,10 +85,10 @@ Make sure to enable the addon by going to `Project Tab -> Project Settings -> Pl
 ## Complete Beginner to YarnSpinner?
 
 Checkout the official [Yarnspinner Tutorial](https://yarnspinner.dev/docs/writing/) page to get started writing interactive narratives!
-Read the introduction pages up until you hit the Unity stuff (we don&rsquo;t need that since we are not working in Unity).
+Read the introduction pages up until you hit the Unity stuff (we don't need that since we are not working in Unity).
 Also make sure to checkout the syntax Reference for a comprehensive list of the yarn languages capabilities.
 
-> :warning: Some core functionality might missing ([please report any issues](https://github.com/kyperbelt/GDYarn/issues)).
+> :warning: Some core functionalities (notably those of Yarn 2.0+) are still missing ([please report any issues](https://github.com/RonaldIaxaduv/GodYarnIt/issues)).
 
 
 <a id="orge11a839"></a>
@@ -113,7 +115,7 @@ In order to start using Yarn Dialogues in your games you require the following t
 
 The **Variable Storage** node is one of the many ways that your dialogues can interact with your game. It is in charge of storing the values that your dialogues use at runtime and can be also accessed through certain script function calls like `set_value(name,value)` and `get_value(name)`.
 
-At least one Variable Storage node must be added to your scene hierarchy in order to run yarn programs using the yarn<sub>runner</sub>. It can be found in the Create Node Popup in the [Godot Editor](https://docs.godotengine.org/en/stable/getting_started/step_by_step/scenes_and_nodes.html#editor).
+At least one Variable Storage node must be added to your scene hierarchy in order to run yarn programs using the Yarn Runner. It can be found in the [Create Node Popup in the Godot Editor](https://docs.godotengine.org/en/stable/getting_started/step_by_step/nodes_and_scenes.html#creating-your-first-scene).
 
 1.  Signals:
 
@@ -124,69 +126,80 @@ At least one Variable Storage node must be added to your scene hierarchy in orde
 
 ### Compiled Yarn Program
 
-This is a [Resource](https://docs.godotengine.org/en/stable/getting_started/step_by_step/resources.html) that contains a collection of yarn script files. On its own its really not that crucial but when combined with the YarnRunner it allows you to combine multiple yarn scripts into a single program.
+This is a [Resource](https://docs.godotengine.org/en/stable/getting_started/step_by_step/resources.html) that contains a collection of yarn script files. On its own its really not that crucial but when combined with the Yarn Runner, it allows you to combine multiple yarn scripts into a single program.
 
-This Resource is available in the Resource drop down and can be created when adding a new resource to the yarn runner.
+This Resource is available in the Resource drop down and can be created when adding a new resource to the Yarn Runner.
 
 1.  Properties:
 
-    -   **Program Name** : This is the name of the program once it is compiled.
-    -   **Directory**: This is the directory to which you want to save the compiled program **Not** the resource itself (I know a bit confusing, I might plan on changing the name later for clarity).
-    -   **Yarn Programs**: This is an array of yarn files to be combined and compiled into a single yarn program. Note that they must not have any conflicting node names as this will generate an error at compile time.
+    -   **Compiled Program Name** : This is the name of the Yarn Program once it is compiled.
+    -   **Compiled Program Directory**: This is the directory to which you want to save the Compiled Yarn Program.
+    -   **Yarn Program Paths**: This is an array of paths to `.yarn` files to be combined and compiled into a single Yarn Program. Note that they must not have any conflicting node names as this will generate an error at compile time.
 
 
 <a id="orgdbcf403"></a>
 
 ### Yarn Runner
 
-The bread and butter of this whole thing, although it would not be impossible to run yarn programs(compiled yarn dialogues) without this node, it would certainly be difficult. WAIT!, before we hit the big shiny **Compile Button** lets first get to know some things about the yarn runner.
+The bread and butter of this whole thing. It communicates with the scripts running the Yarn Program and turns their states and outputs into useful signals and methods for UI elements. Although it would not be impossible to run Yarn Programs (compiled Yarn Dialogues) without this node, it would certainly be difficult.
+WAIT! Before we hit the big shiny **Compile Button**, let's first get to know some things about the Yarn Runner.
 
 1.  Properties:
 
-    -   **Start Node**: this is the node that runs when you start the runner. This refers to the nodes in the YarnSpinner narrative script, it does **Not** have anything to do with nodes inside Godot.
-    -   **Auto Start**: If this is enabled the yarn runner will automatically start the dialogue as soon as it enters the tree. This is fine for testing or for other specific test cases, but for the most part you will want to start the runner externally through its `start()` function.
+    -   **Start Node Title**: This is the title of the Yarn Node that runs when you start the runner. This refers to the nodes in the YarnSpinner narrative script, it does **not** have anything to do with nodes inside Godot.
+    -   **Should Auto Start**: If this is enabled, the Yarn Runner will automatically start the dialogue as soon as it enters the tree. This is fine for testing or for other specific test cases, but for the most part you will want to start the runner externally through its `start` function.
     -   **Variable Storage**: The Variable Storage node that you will be using for this runner.
-    -   **CompiledYarnProgram**: as Explained above, this is the resource that contains information about the program.
+    -   **Compiled Yarn Program**: as Explained above, this is the resource that contains information about the program.
     
-    Right now the only way to compile and run yarn scripts is through the YarnRunner node.
-    Before you can touch the compile button you must first add a [Compiled Yarn Program Resource](#CompiledYarnProgram) to the **Yarn Runner** through the [Inspector](https://docs.godotengine.org/en/latest/tutorials/editor/inspector_dock.html).
+    Right now the only way to compile and run Yarn scripts is through the Yarn Runner node.
+    Before you can touch the compile button you must first add a [Compiled Yarn Program Resource](#CompiledYarnProgram) to the **Yarn Runner** through the [Inspector](https://docs.godotengine.org/en/stable/tutorials/editor/inspector_dock.html).
     
-    Once that is added you can expand it and edit its various different properties as well as adding all the scripts that you want to compile. Then hit compile, and if all went well, there will be no errors displayed. Instead you will get compilation success messages! woooo!
+    Once it's added you can expand it, edit its various properties and add all the scripts that you want to compile. Then hit compile, and if all went well, there will be no errors displayed. Instead you will get compilation success messages! Woooo!
     
-    Set your start node, and add a variable storage and you are ready to move on to the next step.
+    Set your start node title, and add a variable storage and you are ready to move on to the next step.
 
 2.  Signals:
 
     -   `dialogue_started`: Emitted when the dialogue has been started.
-    -   `line_emmited(line)`: Emitted when line of text is handled by the runner. The `line` passed in contains the line text.
-    -   `command_emmited(command, arguments)`: Emitted when a command is handled by the runner. The `command` and an array of its `arguments` are passed. (all are strings)
-    -   `options_emmited(options)`: Emitted when options are handled by the runner. The `options` passed are an array of strings containing all the options available.
+    -   `next_line_prepared(prepared_line: String)`: Emitted when the runner has prepared a new line to display. `prepared_line` contains that line.
+    -   `command_triggered(command: String, arguments: Array[String])`: Emitted when a command is being handled by the runner. The `command` and an array of its `arguments` are passed.
+    -   `options_prepared(prepared_options: Array[String])`: Emitted when options (either Shortcut Options or Dialogue Link Options) are handled by the runner. `prepared_options` contains the displayed text of each option.
     -   `dialogue_finished`: Emitted when the dialogue has finished.
-    -   `resumed`: Emitted when resumed is called on the **YarnRunner**
-    -   `node_started(nodeName)`: Emitted when a new node has started running. The `nodeName` argument is the name of the node that just started.
-    -   `node_compelte(nodeName)`: Emitted when a node has finished running. `nodeName` is the name of the node that just finished.
+    -   `resumed`: Emitted when `resume` is called on the **YarnRunner**
+    -   `node_started(node_name: String)`: Emitted when a new node has started running. `node_name` is the title of that node.
+    -   `node_complete(node_name: String)`: Emitted when a node has finished running. `node_name` is the title of that node.
 
 
 <a id="orge8fe07e"></a>
 
-### GUI Display
+### Yarn Display
 
-If the **Yarn Runner** was the bread and butter, than the **Yarn GUI** is the plate you serve it on. It works by taking in a reference to a Yarn Runner node, and connecting some of its many signals to itself.
+If the **Yarn Runner** was the bread and butter, then a **GUI** is the plate you serve it on. To create a GUI for displaying Yarn Dialogues, you need a reference to a Yarn Runner node and mainly listen to the signals it outputs to receive the text that should be displayed.
 
-GDYarn comes with a default gui implementation and that Is what I am going to focus on, but just know that you are not bound to using the provided implementation and are more than encouraged to roll your own if your usecase requires it.
+GodYarnIt, like GDYarn, comes with a default GUI implementation which will be explained here. But just know that you are not forced to use the provided implementation and are more than encouraged to create your own if your use-case requires it.
 
 1.  Properties:
 
-    -   **Yarn Runner**: The runner that this gui will be &ldquo;listening&rdquo; to.
-    -   **Text**: The text node that this gui will feed lines to. **Note** that the only requirement of the node is that it has a `set_text(text)` function, but it is highly recommended that you use the built in Godot controls for displaying text like [Label](https://docs.godotengine.org/en/stable/classes/class_label.html) and [RichTextLabel](https://docs.godotengine.org/en/stable/classes/class_richtextlabel.html).
-    -   **Name Plate**: This is another text label node, that when present, will look for lines with the pattern `"<name>: <line content>"` and split them at the `:`. The name will be fed to the nameplate and the line content to the Text.
-    -   **Options**: An array of possible option nodes. You can add as many as you will need(usually you should put as many as the most options that will be displayed to the user at any single time). Options nodes will be made invisible when not in use. Recommend that you use some type of button control.
-    -   **Text Speed**: This is the speed at which text is displayed in characters per second. If 0 or less than 0 then lines will be displayed instantly.
+    -   **Yarn Runner Path**: The runner that this GUI will be listening to.
+    -   **Text Display Path**: The text node that this GUI will feed lines to. **Note** that the only requirement of the node is that it has a `set_text(text)` function, but it is highly recommended that you use the built in Godot controls for displaying text like [Label](https://docs.godotengine.org/en/stable/classes/class_label.html) and [RichTextLabel](https://docs.godotengine.org/en/stable/classes/class_richtextlabel.html).
+    -   **Name Plate Display Path**: This is another text label node, that when present, will look for lines with the pattern `"<name>: <line content>"` and split them at the `:`. The name will be fed to the nameplate and the line content to the Text.
+    -   **Option Display Paths**: An array of label nodes that will be used for displaying options (Shortcut Options or Dialogue Link Options). You can add as many as you will need (usually you should put as many as the most options that will be displayed to the user at any single time). Options nodes will be made invisible when not in use. If you use a button control, it will be automatically connected to a handler method.
+    -   **Text Speed**: This is the speed at which text is displayed in characters per second. If `<= 0`, then lines will be displayed instantly.
     
-    The only requirements for the gui display is that you call its `finish_line()` function when you want to call the next line (or close it when there is no lines left). This can be done through a script, or you can hook up a buttons pressed signal to it.
+    The only requirements for the GUI display is that you call its `finish_line()` function when you want to call the next line (or close it when there is no lines left). This can be done through a script, or you can hook up a button pressed signal to it.
     
-    As you can see, this gui implementation makes no requirement for visual style,that is completely left up to you!
-    For an implementation example you can check out the `testdisplay.tscn` included in this project.
+    As you can see, this GUI implementation makes no requirement for visual style - that part is entirely up to you!
+    
+    The node structure of your Yarn Display will probably look like this:
+    - YarnGUI
+	   - TextDisplay
+	   - NameDisplay
+	   - OptionsDisplays (plain control node)
+		- OptionDisplay0
+		- OptionDisplay1
+		- ...
+	- YarnRunner
+		- VariableStorage
 
 2.  Signals:
 

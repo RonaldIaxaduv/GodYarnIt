@@ -1,0 +1,66 @@
+title: Start
+tags:
+---
+Please select which feature you would like to test. // note: Options need to work for this!
+[[Format Functions | Format_Function_Test]]
+[[Shortcut Options | Format_Function_Test]]
+[[BBCode | BBCode_Test]]
+[[if/elseif/else | Condition_Test]]
+===
+title: Format_Function_Test
+tags:
+---
+<<set $test_number = 1>>
+Let's test whether format functions work. The test number is set to {$test_number}.
+Ordinal numbers - I came in {$test_number}[ordinal {$test_number} one="st" two="nd" few="rd" other="th"] place.
+Plurals - I've got [plural {$test_number} one="one apple" other="% apples"].
+Selection - test number is [select {$select_test} 0="zero" 1="one" other="something other than zero or one"].
+Format function test done!
+[[Start]]
+===
+title: Shortcut_Option_Test
+tags:
+---
+Here are some shortcut options:
+->This is an option with a sub block.
+	This is the sub block.
+	It can contain any yarn code.
+->This is an option without a sub block.
+-> This is a conditional option that always shows. <<if true>>
+-> This is a conditional option that never shows. <<if false>>
+
+-> This is a shortcut option independent of the previous.
+-> This also belongs to the second option group.
+Shortcut option test done!
+[[Start]]
+===
+title: BBCode_Test
+tags:
+---
+Let's test some BBCode! // note: Only works inside a RichTextLabel in which bbcode_enabled is set to true!
+[color=#007FFF]This text should be coloured blue[/color] [color=#007f00]and this one is green.[/color]
+[wave]Here is some wavy text.[/wave]
+[b][color=#007FFF][wave]And this text is bold, blue and wavy![/wave][/color][/b]
+BBCode test done!
+[[Start]]
+===
+title: Condition_Test
+tags:
+---
+<<set $test_number = 0>>
+Let's test conditions by setting a test number to...
+-> 0.
+-> 1.
+	<<set $test_number = 1>>
+-> 2.
+	<<set $test_number = 2>>
+<<if $test_number == 0>>
+	You will see this text if the test number is 0.
+<<elseif $test_number == 1>>
+	This text is displayed when the test number is 1.
+<<else>>
+	You've set the test number to 2, so this text is shown.
+<<endif>>
+Condition testing done!
+[[Start]]
+===
