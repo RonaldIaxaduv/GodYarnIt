@@ -37,19 +37,21 @@ Hence, I decided to go the long way and **gave the code a big face-lift and exte
 
 -   [x] Compatibility with Godot 4 (incl. port bug fixes)
 -   [X] Compile multiple Yarn files into a single Program
--   [X] Inline Expressions `{3 \* $variable + foo()}`
--   [X] Format Functions `[func {$value} ...]` (select, plural, ordinal)
+-   [X] Inline Expressions `{3 * $variable + foo()}`
+-   [X] Format Functions `[func {$value} args...]` (select, plural, ordinal)
 -   [X] Pluralisation
 -   [ ] Persistent Variable Storage (currently can only be done manually)
 -   [ ] Custom Commands (implemented already, but cumbersome to use)
 -   [ ] Function Library Extensions (WIP)
--   [X] Option Links `[[OptionalText | TargetNode]]` (deprecated for Yarn 2.0, might be removed)
+-   [X] Option Links `[[OptionalText | TargetNode]]` (deprecated for Yarn 2.0, might get removed)
 -   [X] Shortcut Options `->`
 -   [ ] Localisation (WIP)
 -   [X] if/elseif/else Statements `<<if ...>>`
+-   [X] set command `<<set $var = 5>>`
+-   [X] wait command `<<wait 4>>`
 -   [X] support for BBCode `[b]bold[/b]` (**must use RichTextLabel**)
 -   [ ] Header info processing
--   [ ] Yarn 2.0 Functionalities like jumps `<<jump TargetNode>>` or variable declarations `<<declare $value = true as bool>>`
+-   [ ] Yarn 2.0+ functionalities like jumps `<<jump TargetNode>>` or variable declarations `<<declare $value = true as bool>>`
 
 
 <a id="Installation"></a>
@@ -68,11 +70,11 @@ For more information regarding this process checkout the official [Godot Documen
 
 <a id="org7865e93"></a>
 
-## After Install
+## After Installing
 
-Make sure the plugin directory is located in `res://addons/` (case-sensitive). If not, you will need to adjust dozens of file paths (`Ctrl+Shift+F`, search GodYarnIt's directory, replace all affected paths).
+Make sure the plugin directory is located in `res://addons/` (case-sensitive!). If not, you will need to adjust dozens of file paths (`Ctrl+Shift+F`, search GodYarnIt's directory, replace all affected paths).
 
-Enable the plugin by going to `Project Tab -> Project Settings -> Plugins` and ticking GodYarnIt's checkbox.
+Enable the plugin by going to `Project > Project Settings > Plugins` and ticking GodYarnIt's checkbox.
 
 
 <a id="Quickstart"></a>
@@ -191,10 +193,10 @@ GodYarnIt, like GDYarn, comes with a default GUI implementation which will be ex
     As you can see, this GUI implementation makes no requirement for visual style - that part is entirely up to you!
     
     The node structure of your Yarn Display will probably look like this:
-    - YarnGUI
-	   - TextDisplay
-	   - NameDisplay
-	   - OptionsDisplays (plain control node)
+- YarnGUI
+	- TextDisplay
+	- NameDisplay
+	- OptionsDisplays (plain control node)
 		- OptionDisplay0
 		- OptionDisplay1
 		- ...
