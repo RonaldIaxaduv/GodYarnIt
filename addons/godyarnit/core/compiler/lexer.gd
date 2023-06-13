@@ -98,7 +98,7 @@ func create_states() -> void:
 	var format_expression: String = FORMAT_FUNCTION + "-" + EXPRESSION
 	var inline_expression: String = "inline" + "-" + EXPRESSION
 
-	#TODO: FIXME: Add transition from shortcut options and option links into inline expressions and format functions
+	# TODO: FIXME: Add transition from shortcut options and option links into inline expressions and format functions
 
 	_states = {} # clear state dictionary
 
@@ -308,10 +308,11 @@ func tokenize_line(line: String, line_number: int) -> Array[Token]:
 	var whitespace: RegEx = RegEx.new()
 	var _ok = whitespace.compile(WHITESPACE)
 	if _ok != OK:
-		printerr("unable to compile regex WHITESPACE")
+		printerr("unable to compile the whitespace regex")
 		error = ERR_COMPILATION_FAILED
 		return []
 
+	# create all non-indent tokens for this line
 	while offset < fresh_line.length():
 		if fresh_line.substr(offset).begins_with(LINE_COMMENT):
 			break
@@ -367,7 +368,7 @@ func tokenize_line(line: String, line_number: int) -> Array[Token]:
 			var token: Token = Token.new(
 				rule.token_type, _current_state, line_number, offset, token_text
 			)
-			token.delimits_text = rule.delimits_text
+			token.delimits_text_start = rule.delimits_text_start
 
 			token_stack.push_front(token)
 
@@ -400,9 +401,19 @@ func tokenize_line(line: String, line_number: int) -> Array[Token]:
 			)
 			error = ERR_INVALID_DATA
 			return []
-
+		
+		# handle whitespace characters trailing this token
 		var last_white_space: RegExMatch = whitespace.search(fresh_line, offset)
-		if last_white_space:
+		if last_white_space and last_white_space.get_string().length() > 0:
+			if !check_token_ignores_trailing_whitespace(token_stack):
+				# don't ignore whitespace characters after certain tokens, e.g. format functions
+				var whitespace_token: Token = Token.new(
+					YarnGlobals.TokenType.Text, _current_state, line_number, offset + last_white_space.get_string().length(),
+					fresh_line.substr(offset, last_white_space.get_string().length()))
+				whitespace_token.delimits_text_start = true
+				token_stack.push_front(whitespace_token)
+			#else:
+			#	# ignore trailing whitespace
 			offset += last_white_space.get_string().length()
 
 	# here: tokenization of the line completed.
@@ -412,6 +423,15 @@ func tokenize_line(line: String, line_number: int) -> Array[Token]:
 	token_stack.reverse() # pushed everything to the front so far, so to match the order of the tokens in the actual text, everything needs to be reversed
 
 	return token_stack
+
+
+## Checks whether the previously added token should ignore whitespaces that
+## follow it.
+## This is important to allow whitespaces between format functions and
+## expressions, e.g. "[format function] [another format function]".
+func check_token_ignores_trailing_whitespace(token_stack: Array[Token]):
+	return not ((token_stack.front() as Token).token_type == YarnGlobals.TokenType.FormatFunctionEnd
+		or (token_stack.front() as Token).token_type == YarnGlobals.TokenType.ExpressionFunctionEnd)
 
 
 ## Gets the indentation depth of the given line
@@ -444,7 +464,7 @@ class Token:
 	var offset: int
 	var text: String
 
-	var delimits_text: bool = false
+	var delimits_text_start: bool = false
 	var param_count: int
 	var lexer_state: String
 
@@ -492,7 +512,7 @@ class LexerState:
 
 		var delimiters: PackedStringArray = []
 		for rule in rules:
-			if rule.delimits_text:
+			if rule.delimits_text_start:
 				delimiters.append("%s" % rule.regex.get_pattern().substr(2))
 
 		var pattern: String = "\\G((?!%s).)*" % [String("|").join(delimiters)]
@@ -526,14 +546,14 @@ class Rule:
 	var target_state: String
 	var token_type: int
 	var is_text_rule: bool
-	var delimits_text: bool
+	var delimits_text_start: bool # if there's text following the token created by this rule, the text will be parsed starting at the token's offset value
 
-	func _init(token_type: int, regex_pattern: String, target_state: String, delimits_text: bool):
+	func _init(token_type: int, regex_pattern: String, target_state: String, delimits_text_start: bool):
 		self.token_type = token_type
 		self.regex = RegEx.new()
 		self.regex.compile(regex_pattern)
 		self.target_state = target_state
-		self.delimits_text = delimits_text
+		self.delimits_text_start = delimits_text_start
 		self.is_text_rule = false
 
 	func _to_string():

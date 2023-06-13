@@ -21,7 +21,6 @@ func _ready():
 	get_node(CompileButton).connect("pressed", Callable(self, "_clicked"))
 	get_node(OpenDialog).connect("pressed", Callable(self, "_open_dialog"))
 	get_node(TestButton).connect("pressed", Callable(self, "_close_dialog"))
-	pass  # Replace with function body.
 
 
 func _clicked():

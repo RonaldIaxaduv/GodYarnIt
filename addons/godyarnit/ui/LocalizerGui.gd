@@ -391,7 +391,7 @@ func _initiate() -> void:
 	# populate the localisation list with all the different locales
 	for locale in LOCALES:
 		localization_list.add_item(TranslationServer.get_locale_name(locale)) # display the actual language instead of the abbreviation
-	localization_list.update()
+	#localization_list.update()
 	
 	localization_list.connect("item_selected", Callable(self, "localization_selected"))
 

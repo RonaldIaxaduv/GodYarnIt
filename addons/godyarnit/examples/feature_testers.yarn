@@ -1,66 +1,66 @@
 title: Start
 tags:
 ---
-Please select which feature you would like to test. // note: Options need to work for this!
-[[Format Functions | Format_Function_Test]]
-[[Shortcut Options | Format_Function_Test]]
-[[BBCode | BBCode_Test]]
-[[if/elseif/else | Condition_Test]]
+Please select which feature you would like to test.  #line:85634fce // note: Options need to work for this!
+[[Format Functions | Format_Function_Test]] #line:8a4e46b8 
+[[Shortcut Options | Shortcut_Option_Test]] #line:77039f07 
+[[BBCode | BBCode_Test]] #line:e08c2c5 
+[[if/elseif/else | Condition_Test]] #line:f7cb590c 
 ===
 title: Format_Function_Test
 tags:
 ---
 <<set $test_number = 1>>
-Let's test whether format functions work. The test number is set to {$test_number}.
-Ordinal numbers - I came in {$test_number}[ordinal {$test_number} one="st" two="nd" few="rd" other="th"] place.
-Plurals - I've got [plural {$test_number} one="one apple" other="% apples"].
-Selection - test number is [select {$select_test} 0="zero" 1="one" other="something other than zero or one"].
-Format function test done!
-[[Start]]
+Let's test whether format functions work. The test number is set to {$test_number}. #line:33675fd7 
+Ordinal numbers - I came in {$test_number}[ordinal {$test_number} one="st" two="nd" few="rd" other="th"] place. #line:b15e688b 
+Plurals - I've got [plural {$test_number} one="one apple" other="% apples"]. #line:e5130c58 
+Selection - test number is [select {$test_number} 0="zero" 1="one" other="something other than zero or one"]. #line:ea26dbe5 
+Format function test done! #line:3209528a 
+[[Start]] #line:62345552 
 ===
 title: Shortcut_Option_Test
 tags:
 ---
-Here are some shortcut options:
-->This is an option with a sub block.
-	This is the sub block.
-	It can contain any yarn code.
-->This is an option without a sub block.
--> This is a conditional option that always shows. <<if true>>
--> This is a conditional option that never shows. <<if false>>
+Here are some shortcut options: #line:1bdfb587 
+->This is an option with a sub block. #line:2b2ef423 
+	This is the sub block. #line:c375b1be 
+	It can contain any yarn code. #line:38818424 
+->This is an option without a sub block. #line:e5b9c004 
+-> This is a conditional option that always shows. <<if true>> #line:e40388e4 
+-> This is a conditional option that never shows. <<if false>> #line:6a4fd586 
 
--> This is a shortcut option independent of the previous.
--> This also belongs to the second option group.
-Shortcut option test done!
-[[Start]]
+-> This is a shortcut option independent of the previous. #line:ce6d99bb 
+-> This also belongs to the second option group. #line:24b9e75d 
+Shortcut option test done! #line:3876905 
+[[Start]] #line:92d58ca0 
 ===
 title: BBCode_Test
 tags:
 ---
-Let's test some BBCode! // note: Only works inside a RichTextLabel in which bbcode_enabled is set to true!
-[color=#007FFF]This text should be coloured blue[/color] [color=#007f00]and this one is green.[/color]
-[wave]Here is some wavy text.[/wave]
-[b][color=#007FFF][wave]And this text is bold, blue and wavy![/wave][/color][/b]
-BBCode test done!
-[[Start]]
+Let's test some BBCode!  #line:48e2cb00 // note: Only works inside a RichTextLabel in which bbcode_enabled is set to true!
+[color=#007FFF]This text should be coloured blue[/color] [color=#007f00]and this one is green.[/color] #line:9a78809e 
+[wave]Here is some wavy text.[/wave] #line:83729be7 
+[b][color=#007FFF][wave]And this text is bold, blue and wavy![/wave][/color][/b] #line:9beb1f7 
+BBCode test done! #line:34765e5b 
+[[Start]] #line:8152b849 
 ===
 title: Condition_Test
 tags:
 ---
 <<set $test_number = 0>>
-Let's test conditions by setting a test number to...
--> 0.
--> 1.
+Let's test conditions by setting a test number to... #line:f75c4515 
+-> 0. #line:228a37f5 
+-> 1. #line:f3567fa5 
 	<<set $test_number = 1>>
--> 2.
+-> 2. #line:66448d6 
 	<<set $test_number = 2>>
 <<if $test_number == 0>>
-	You will see this text if the test number is 0.
+	You will see this text if the test number is 0. #line:4c1894a6 
 <<elseif $test_number == 1>>
-	This text is displayed when the test number is 1.
+	This text is displayed when the test number is 1. #line:720c6c07 
 <<else>>
-	You've set the test number to 2, so this text is shown.
+	You've set the test number to 2, so this text is shown. #line:52aeca3d 
 <<endif>>
-Condition testing done!
-[[Start]]
+Condition testing done! #line:77747af5 
+[[Start]] #line:5684a41a 
 ===

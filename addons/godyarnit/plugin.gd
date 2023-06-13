@@ -47,9 +47,9 @@ func _enter_tree():
 
 	localizer_gui = LocalizerScene.instantiate()
 	localizer_gui._initiate()
-	add_child(localizer_gui)
-	if localizer_gui.visible:
-		localizer_gui.get_ok_button()._pressed()
+	#add_child(localizer_gui)
+	#if localizer_gui.visible:
+	#	localizer_gui.get_ok_button()._pressed()
 	
 	# add UI element for compilation
 	compiler_inspector = CompilerInspector.new()
@@ -57,7 +57,7 @@ func _enter_tree():
 	# add menu item under Project > Tools
 	add_tool_menu_item(LOCALIZER_NAME, Callable(self, "open_localizer_gui"))
 
-	add_inspector_plugin(compiler_inspector) # Inspector plugins are used to extend EditorInspector and provide custom configuration tools for object's properties.
+	add_inspector_plugin(compiler_inspector) # adds a compile button to the inspector of YarnRunner nodes
 
 
 ## Called when the plugin is deactivated.
@@ -78,4 +78,6 @@ func _exit_tree():
 
 ## Called when the menu item in **Project > Tools** with the name of [const LOCALIZER_NAME] is clicked.
 func open_localizer_gui():
+	if !localizer_gui.is_inside_tree():
+		add_child(localizer_gui)
 	localizer_gui.popup_centered()

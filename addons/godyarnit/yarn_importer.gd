@@ -16,7 +16,7 @@ func _ready():
 
 ## Unique name of the importer
 func _get_importer_name() -> String:
-	return "gdyarn.yarn_file"
+	return "godyarnit.yarn_file"
 
 
 ## Gets the name to display in the import window ("Import as _get_visible_name()")
@@ -89,7 +89,7 @@ func _import(source_file_path: String, save_path: String, options: Dictionary, p
 
 	# Check whether file containing all tracked files already exists.
 	# If so, load its contents into all_tracked_files.
-	if existing_file_tracker.file_exists(YARN_TRACKER_PATH):
+	if FileAccess.file_exists(YARN_TRACKER_PATH):
 		existing_file_tracker = FileAccess.open(YARN_TRACKER_PATH, FileAccess.READ)
 		all_tracked_files = existing_file_tracker.get_as_text().split("\n")
 		existing_file_tracker.close()

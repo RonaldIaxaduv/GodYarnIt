@@ -258,13 +258,12 @@ class Statement:
 			print("parsing a custom command")
 			custom_command = CustomCommand.new(self, parser)
 			statement_type = Type.CustomCommand
-		elif parser.next_token_is([YarnGlobals.TokenType.Text]):
+		elif LineNode.can_parse(parser):
 			print("parsing text")
 			# line = parser.expect_token([YarnGlobals.TokenType.Text]).value
 			# statement_type = Type.Line
 			line = LineNode.new(self, parser)
 			statement_type = Type.Line
-			print("new line found == ", line.line_text)
 			# parser.expect_token([YarnGlobals.TokenType.EndOfLine])
 		else:
 			printerr(
@@ -698,6 +697,8 @@ class LineNode:
 						return
 				else:
 					tags.append(tag_token.value)
+				
+				break # line tag marks the end of the line!
 
 			else:
 				# expecting text -> store text
@@ -708,6 +709,16 @@ class LineNode:
 					# token is actually a command -> put back on stack!
 					parser._tokens.push_front(tt)
 					break
+		
+		print("new line found: ", line_text)
+	
+	static func can_parse(parser: YarnParser) -> bool:
+		return parser.next_token_is([
+				YarnGlobals.TokenType.FormatFunctionStart,
+				YarnGlobals.TokenType.ExpressionFunctionStart,
+				YarnGlobals.TokenType.TagMarker,
+				YarnGlobals.TokenType.Text
+			] as Array[int])
 	
 	## Returns a string representing this line node.
 	func get_tree_string(indent_level: int) -> String:

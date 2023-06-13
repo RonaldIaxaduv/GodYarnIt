@@ -632,7 +632,7 @@ static func print_tokens(node_name: String, tokens: Array[Lexer.Token] = []):
 	for token in tokens:
 		list.append(
 			(
-				"\t [%14s] %s (%s line %s)\n"
+				"\t [%14s] %s (%s---line %s)\n"
 				% [
 					token.lexer_state,
 					YarnGlobals.get_script().get_token_type_name(token.token_type),

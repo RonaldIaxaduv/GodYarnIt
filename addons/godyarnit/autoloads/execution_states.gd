@@ -264,6 +264,12 @@ func expand_format_functions(input: String, locale: String) -> String:
 			# printerr("functionName = %s value=[%s] , locale=[%s]" % [function_result.function_name, function_result.variable_value, locale])
 			match function_result.function_name:
 				"select":
+					print("executing selection format function...")
+					print("value: %s" % function_result.variable_value)
+					print("maps:")
+					for key in function_result.value_map.keys():
+						print("\t%s -> %s" % [key, function_result.value_map[key]])
+					
 					if function_result.variable_value in function_result.value_map:
 						formatted_line = formatted_line.replace(
 							"[" + segment + "]", function_result.value_map[function_result.variable_value]
