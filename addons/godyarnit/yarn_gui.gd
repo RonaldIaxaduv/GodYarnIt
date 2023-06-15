@@ -56,7 +56,7 @@ var elapsed_line_time: float = 0 ## Time that this line has been displaying. Use
 var should_update_total_line_time: bool = false ## If set to true, [member full_line_time] will be recalculated the next time [method _process] is called.
 var last_visible_chars: int = 0 ## Number of characters that were visible the last time [method _process] was called.
 
-var should_display_immediately: bool = true ## If set to true, the next line set by [method set_next_line] will start displaying immediately without any further user action.
+var should_display_immediately: bool = true ## If set to true, the next line set by [method _on_next_line_prepared] will start displaying immediately without any further user action.
 
 var is_showing_options: bool = false ## True if the GUI is currently showing shortcut options or a dialog option with text.
 var dialogue_has_finished: bool = false ## True if the dialog has finished.
@@ -71,11 +71,11 @@ func _ready():
 	if _yarn_runner_path:
 		yarn_runner = get_node(_yarn_runner_path)
 		if yarn_runner:
-			yarn_runner.next_line_prepared.connect(Callable(self, "set_next_line"))
-			yarn_runner.node_started.connect(Callable(self, "on_node_started"))
-			yarn_runner.options_prepared.connect(Callable(self, "show_options"))
-			yarn_runner.dialogue_finished.connect(Callable(self, "on_dialogue_finished"))
-			yarn_runner.command_triggered.connect(Callable(self, "on_command_triggered"))
+			yarn_runner.next_line_prepared.connect(Callable(self, "_on_next_line_prepared"))
+			yarn_runner.node_started.connect(Callable(self, "_on_node_started"))
+			yarn_runner.options_prepared.connect(Callable(self, "_on_options_prepared"))
+			yarn_runner.dialogue_finished.connect(Callable(self, "_on_dialogue_finished"))
+			yarn_runner.command_triggered.connect(Callable(self, "_on_command_triggered"))
 		else:
 			printerr("Yarn GUI: %s does not point to a yarn runner!" % _yarn_runner_path)
 	else:
@@ -91,13 +91,13 @@ func _ready():
 				pass
 			elif not text_display.has_method("set_text"):
 				printerr("_text_display_path for the Yarn GUI did not point to a node with a set_text method. No text will be displayed.")
-				config.has_unknown_output = true
+				config.has_unknown_output_type = true
 		else: # text == null
 			printerr("Yarn GUI: %s does not point to a text display. No text will be displayed." % _text_display_path)
-			config.has_unknown_output = true
+			config.has_unknown_output_type = true
 	else:
 		printerr("_text_display_path for the Yarn GUI hasn't been set. No text will be displayed.")
-		config.has_unknown_output = true
+		config.has_unknown_output_type = true
 	
 	# prepare the text UI for displaying the speaker's name
 	if _name_plate_display_path:
@@ -151,12 +151,12 @@ func _process(delta: float) -> void:
 		should_update_total_line_time = false
 
 	# prepare next line if this one has been finished
-	if not line_has_finished and not config.has_unknown_output:
+	if not line_has_finished and not config.has_unknown_output_type:
 		if _text_speed <= 0 or elapsed_line_time >= full_line_time:
 			line_has_finished = true
 			elapsed_line_time += full_line_time
 			line_finished.emit()
-			await yarn_runner.resume() # TODO FIXME: i believe if _text_speed <= 0, all dialogue would be skipped because this would already load the next line without resetting elapsed_line_time or full_line_time (?)
+			await yarn_runner.advance_dialogue() # TODO FIXME: i believe if _text_speed <= 0, all dialogue would be skipped because this would already load the next line without resetting elapsed_line_time or full_line_time (?)
 				#							   imo there should either be a return after this line or this paragraph should come AFTER the paragraph for displaying lines
 
 	# display text (either a fraction or full text)
@@ -169,32 +169,6 @@ func _process(delta: float) -> void:
 		text_display.set_visible_ratio(1.0)
 
 	elapsed_line_time += delta
-
-
-## Sets [member dialogue_has_finished] to true.
-## Called by [signal yarn_runner.dialogue_finished].
-func on_dialogue_finished():
-	dialogue_has_finished = true
-
-
-## Handles special GUI behaviour for certain commands
-## like wait.
-## Called by [signal yarn_runner.command_triggered]
-func on_command_triggered(command: String, arguments: Array):
-	if command == "wait":
-		#clear_text() # TODO FIXME: commented this. waiting times will be possible within lines of dialogue afaik, so no text should be cleared here!
-		#line_started.emit() # TODO FIXME: commented this. i don't see why this should be called here, but i might've been wrong.
-		
-		
-		await yarn_runner.resumed
-		print("GUI is waiting now...")
-		await yarn_runner.resumed
-		print("GUI's wait ended.")
-		
-		# TODO FIXME: commented out the following two lines since they should, in theory
-		#			  trigger automatically after clean_text has been called.
-		#await finish_line()
-		#display_next_line()
 
 
 ## Shows the yarn GUI.
@@ -215,67 +189,26 @@ func hide_gui():
 	gui_hidden.emit()
 
 
-## Sets next_line and prepares name plate display using
-## the given string.
-## Immediately displays the next line if the current line
-## is empty. (TODO FIXME: this is not clear from the code here -> check again.)
-## Called by [signal yarn_runner.next_line_prepared].
-func set_next_line(line: String):
-	if config.has_unknown_output:
-		return
-	
-	print("setting next line...")
-
-	var name_plate_result: RegExMatch = name_plate_regex.search(line)
-	if name_plate_display:
-		if name_plate_result:
-			# line contains a name label -> display
-			var name_plate: String = name_plate_result.get_string()
-			line = line.replace(name_plate + ":", "") # remove name label from the string
-			line.strip_edges(true, false) # remove space after the name plate if there was one
-			name_plate_display.set_text(name_plate)
-			name_plate_display.visible = true
-		else:
-			# no name label on this line
-			name_plate_display.visible = false
-
-	next_line = line
-	if should_display_immediately:
-		should_display_immediately = false
-		display_next_line()
+## Hides all UI elements in [member option_displays].
+func hide_options():
+	for option_display in option_displays:
+		option_display.visible = false
+	is_showing_options = false
 
 
-## Sets the text of the text display to next_line and
-## resets its ratio of visible characters.
-## Emits [signal text_changed] and [signal line_started].
-## Note: Some pre-processing of next_line takes place in
-## [method set_next_line] beforehand.
-func display_next_line():
-	if yarn_runner.is_waiting:
-		print("waiting for runner to resume before displaying line...")
-		#await yarn_runner.resumed
-		await yarn_runner.wait_timer.timeout
-		#return
-	
-	line_has_finished = false
-	
-	print("displaying next line...")
-	
-	if not config.has_unknown_output and not next_line.is_empty():
-		if config.is_rich_text_label:
-			text_display.parse_bbcode(next_line)
-		else:
-			# other text displays: display raw bbcode without formatting
-			text_display.set_text(next_line)
-
-		last_visible_chars = 0
-		text_display.visible_ratio = 0.0
-		should_update_total_line_time = true # tells [method _process] to reset the portion of shown text on the display
-		
-		text_changed.emit()
-		line_started.emit()
-
-		next_line = ""
+## If the GUI is currently showing options,
+## the option given by option_index is chosen.
+## The next line will be displayed immediately.
+## Emits [signal option_selected].
+func select_option(option_index: int):
+	if is_showing_options:
+		yarn_runner.choose(option_index)
+		hide_options()
+		#clear_text()
+		line_has_finished = true
+		should_display_immediately = true
+		await finish_line()
+		option_selected.emit()
 
 
 ## If the current line hasn't been finished yet,
@@ -298,29 +231,58 @@ func finish_line():
 		if next_line.is_empty():
 			print("next line is empty or hasn't been prepared yet. skipping to next non-empty line.")
 			should_display_immediately = true
-			await yarn_runner.resume()
+			await yarn_runner.advance_dialogue()
 		elif not next_line.is_empty():
 			#print("displaying next line.")
-			display_next_line()
+			_display_next_line()
 		
 	else:
 		print("finishing displaying next line.")
 		line_has_finished = true
 		elapsed_line_time += full_line_time
-		await yarn_runner.resume()
+		await yarn_runner.advance_dialogue()
+
+
+## Hides the name plate display and clears the
+## text display. Note that this will leave [member elapsed_time]
+## unaffected, so [method _process] will still
+## display the next line after a while under normal
+## circumstances.
+func clear_text():
+	# hide name plate display
+	if name_plate_display:
+		name_plate_display.visible = false
+	
+	# clear text display
+	if text_display:
+		if text_display is RichTextLabel:
+			text_display.clear()
+		else:
+			text_display.set_text("")
+		text_display.queue_redraw()
 
 
 ## Begins executing the current node.
 ## Called by [signal yarn_runner.node_started].
-func on_node_started(node_name: String):
-	await yarn_runner.resume()
+func _on_node_started(node_name: String):
+	await yarn_runner.advance_dialogue()
 
 
-## Hides all UI elements in [member option_displays].
-func hide_options():
-	for option_display in option_displays:
-		option_display.visible = false
-	is_showing_options = false
+## Sets [member dialogue_has_finished] to true.
+## Called by [signal yarn_runner.dialogue_finished].
+func _on_dialogue_finished():
+	dialogue_has_finished = true
+
+
+## Handles special GUI behaviour for certain commands
+## like wait.
+## Called by [signal yarn_runner.command_triggered]
+func _on_command_triggered(command: String, arguments: Array):
+	if command == "wait":		
+		await yarn_runner.resumed
+		print("GUI is waiting now...")
+		await yarn_runner.resumed
+		print("GUI's wait ended.")
 
 
 ## Displays a number of shortcut options or a dialogue options
@@ -330,7 +292,7 @@ func hide_options():
 ## and an error is displayed.
 ## Emits [signal options_shown].
 ## Called by [signal yarn_runner.options_prepared].
-func show_options(prepared_options: Array[String]):
+func _on_options_prepared(prepared_options: Array[String]):
 	if option_displays.size() < prepared_options.size():
 		printerr(
 			(
@@ -339,6 +301,7 @@ func show_options(prepared_options: Array[String]):
 			)
 		)
 
+	# show all affected option displays
 	for i in range(min(option_displays.size(), prepared_options.size())):
 		option_displays[i].set_text(prepared_options[i])
 		option_displays[i].visible = true
@@ -347,19 +310,67 @@ func show_options(prepared_options: Array[String]):
 	options_shown.emit()
 
 
-## If the GUI is currently showing options,
-## the option given by option_index is chosen.
-## The next line will be displayed immediately.
-## Emits [signal option_selected].
-func select_option(option_index: int):
-	if is_showing_options:
-		yarn_runner.choose(option_index)
-		hide_options()
-		#clear_text()
-		line_has_finished = true
-		should_display_immediately = true
-		await finish_line()
-		option_selected.emit()
+## Sets next_line and prepares name plate display using
+## the given string.
+## Immediately displays the next line if the current line
+## is empty. (TODO FIXME: this is not clear from the code here -> check again.)
+## Called by [signal yarn_runner.next_line_prepared].
+func _on_next_line_prepared(line: String):
+	if config.has_unknown_output_type:
+		return
+	
+	print("setting next line...")
+
+	var name_plate_result: RegExMatch = name_plate_regex.search(line)
+	if name_plate_display:
+		if name_plate_result:
+			# line contains a name label -> display
+			var name_plate: String = name_plate_result.get_string()
+			line = line.replace(name_plate + ":", "") # remove name label from the string
+			line.strip_edges(true, false) # remove space after the name plate if there was one
+			name_plate_display.set_text(name_plate)
+			name_plate_display.visible = true
+		else:
+			# no name label on this line
+			name_plate_display.visible = false
+
+	next_line = line
+	if should_display_immediately:
+		should_display_immediately = false
+		_display_next_line()
+
+
+## Sets the text of the text display to next_line and
+## resets its ratio of visible characters.
+## Emits [signal text_changed] and [signal line_started].
+## Note: Some pre-processing of next_line takes place in
+## [method _on_next_line_prepared] beforehand.
+func _display_next_line():
+	if yarn_runner.is_waiting:
+		print("waiting for runner to resume before displaying line...")
+		#await yarn_runner.resumed
+		await yarn_runner.wait_timer.timeout
+		#return
+	
+	line_has_finished = false
+	
+	print("displaying next line...")
+	
+	if not (config.has_unknown_output_type or next_line.is_empty()):
+		if config.is_rich_text_label:
+			text_display.parse_bbcode(next_line)
+		else:
+			# other text displays: display raw bbcode without formatting
+			text_display.set_text(next_line)
+
+		last_visible_chars = 0
+		text_display.visible_ratio = 0.0
+		should_update_total_line_time = true # tells [method _process] to reset the portion of shown text on the display
+		
+		text_changed.emit()
+		line_started.emit()
+
+		next_line = ""
 
 
 ### Setter method of [member _yarn_runner_path].
@@ -393,12 +404,12 @@ func select_option(option_index: int):
 #				pass
 #			elif not text_display.has_method("set_text"):
 #				printerr("_text_display_path for the Yarn GUI did not point to a node with a set_text method. No text will be displayed.")
-#				config.has_unknown_output = true
+#				config.has_unknown_output_type = true
 #		else: # text_display == null
 #			printerr("_text_display_path for the Yarn GUI did not point to a node. No text will be displayed.")
-#			config.has_unknown_output = true
+#			config.has_unknown_output_type = true
 #	else:
-#		config.has_unknown_output = true
+#		config.has_unknown_output_type = true
 #
 #
 ### Setter method of [member _name_plate_display_path].
@@ -433,25 +444,6 @@ func select_option(option_index: int):
 #				continue
 
 
-## Hides the name plate display and clears the
-## text display. Note that this will leave [member elapsed_time]
-## unaffected, so [method _process] will still
-## display the next line after a while under normal
-## circumstances.
-func clear_text():
-	# hide name plate display
-	if name_plate_display:
-		name_plate_display.visible = false
-	
-	# clear text display
-	if text_display:
-		if text_display is RichTextLabel:
-			text_display.clear()
-		else:
-			text_display.set_text("")
-		text_display.queue_redraw()
-
-
 ## A class holding some variables that should be publically visible.
 ##
 ##
@@ -465,4 +457,4 @@ class Configuration:
 	## a set_text(text) function. If it does not, we
 	## want to print out an error to the console instead, letting the user
 	## know that the display is invalid.
-	var has_unknown_output: bool = false
+	var has_unknown_output_type: bool = false

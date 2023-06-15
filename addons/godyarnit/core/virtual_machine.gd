@@ -130,7 +130,8 @@ func reset_state():
 	_state = VmState.new()
 
 
-## Executes the next instruction of the current node (indicated by _state.program_instruction_index).
+## Executes the next instructions of the current node (indicated by _state.program_instruction_index)
+## until the execution state isn't running anymore, i.e. until a line or options have been prepared etc.
 ## TODO FIXME: The check for is_waiting takes place after the signal is emitted atm. This might be wrong!
 func resume() -> bool:
 	# check various conditions for resuming the VM

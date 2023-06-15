@@ -18,18 +18,18 @@ signal compile_clicked(show_tokens: bool, print_syntax: bool)
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
-	get_node(CompileButton).connect("pressed", Callable(self, "_clicked"))
-	get_node(OpenDialog).connect("pressed", Callable(self, "_open_dialog"))
-	get_node(TestButton).connect("pressed", Callable(self, "_close_dialog"))
+	get_node(CompileButton).connect("pressed", Callable(self, "_on_compile_pressed"))
+	get_node(OpenDialog).connect("pressed", Callable(self, "_on_open_dialog_pressed"))
+	get_node(TestButton).connect("pressed", Callable(self, "_on_close_dialog_pressed"))
 
 
-func _clicked():
+func _on_compile_pressed():
 	compile_clicked.emit((get_node(ShowTokensCheckBox) as CheckBox).button_pressed, (get_node(PrintTreeCheckBox) as CheckBox).button_pressed)
 
 
-func _open_dialog():
+func _on_open_dialog_pressed():
 	(get_node(Dialog) as PopupPanel).popup_centered() # used to be PopupDialog
 
 
-func _close_dialog():
+func _on_close_dialog_pressed():
 	(get_node(Dialog) as PopupPanel).hide() # used to be PopupDialog

@@ -74,11 +74,8 @@ func _get_option_visibility(path: String, option: StringName, options: Dictionar
 ## Here: Creates a Resource file recognised by this plugin from the given source file.
 func _import(source_file_path: String, save_path: String, options: Dictionary, platform_variants: Array[String], gen_files: Array[String]) -> Error:
 #	if ResourceLoader.exists(source_file_path):
-#		# file has already been imported
-#		return OK
-#
 #		# TODO: check whether source file has changed since the file has been
-#		#		imported. if so, re-import after all!
+#		#		imported. if it hasn't, return!
 	
 	print("YarnImporter: importing " + source_file_path)
 

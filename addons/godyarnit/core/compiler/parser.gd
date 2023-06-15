@@ -1162,7 +1162,7 @@ class ExpressionNode:
 					# else
 					# we have more than 1 param
 					if last.token_type != YarnGlobals.TokenType.LeftParen:
-						func_stack.back().paramCount += 1
+						func_stack.back().param_count += 1
 
 					rpn.append(op_stack.pop_back())
 					func_stack.pop_back()

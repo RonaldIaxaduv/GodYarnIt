@@ -12,8 +12,8 @@ signal next_line_prepared(prepared_line: String) ## A signal emitted when a new 
 signal command_triggered(command: String, arguments: Array[String]) ## A signal emitted when a yarn command (<<>>) has been triggered.
 signal options_prepared(prepared_options: Array[String]) ## A signal emitted when a set of options (shortcut options / link to node) has been prepared for displaying.
 signal dialogue_finished ## A signal emitted when a dialogue (and some clean-up procedures) has been finished.
-signal resumed ## TODO FIXME: A signal emitted when?
-##                            Also: should probably split this into resuming and resumed!
+signal advance_dialogue_triggered ## A signal emitted when [method advance_dialogue] has been called, regardless of whether the dialogue actually advances.
+signal dialogue_advanced ## A signal emitted when [method advance_dialogue] has been called and the dialogue successfully advanced.
 signal node_started(node_name: String) ## A signal emitted when preparations after the start of a new node have been finished.
 signal node_complete(node_name: String) ## A signal emitted when clean-up procedures after the completion of a node have been finished.
 
@@ -113,14 +113,13 @@ func choose(option_index: int) -> void:
 			printerr("_dialogue was not currently waiting for option to be selected")
 
 
-## TODO FIXME: split [signal resumed] into [signal resumed]
-##			   and [signal resuming] to correctly handle waits (hopefully)
-func resume() -> void:
-	resumed.emit()
+## Resumes the dialogue to the next line / option group / ...
+func advance_dialogue() -> void:
+	advance_dialogue_triggered.emit()
 	if _dialogue_has_started and not is_waiting:
-		#resumed.emit()
-		print("actually resuming runner")
+		print("runner: advancing dialogue")
 		await _dialogue.resume() # executes next instruction(s)
+		dialogue_advanced.emit()
 
 
 ## Returns the YarnDialogue member of this class.
@@ -211,7 +210,7 @@ func _handle_command(command) -> int:
 		if wait_timer.paused or not wait_timer.is_stopped():
 			wait_timer.stop()
 		wait_timer.wait_time = time
-		await self.resumed
+		await self.advance_dialogue_triggered
 		print("runner is waiting now...")
 		wait_timer.start()
 	else:
@@ -292,4 +291,4 @@ func _handle_node_complete(node: String) -> int:
 func _on_wait_timeout():
 	print("runner's wait ended.")
 	is_waiting = false
-	#await resume() # dialogue has already resumed after _handle_command has finished, so the next line has already been prepared
+	#await advance_dialogue() # dialogue has already resumed after _handle_command has finished, so the next line has already been prepared

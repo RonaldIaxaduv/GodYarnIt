@@ -85,8 +85,9 @@ func set_node(node_name: String = DEFAULT_START):
 	_vm.set_current_node(node_name)
 
 
-## If the virtual machine currently isn't running (i.e. executing an
-## instruction), it's resumed (i.e. it executes the next instruction).
+## If the virtual machine currently isn't running (i.e. executing
+## instructions), it's resumed (i.e. it executes the next instructions
+## until a line has been prepared or options have been prepared etc.).
 func resume():
 	if _vm.execution_state == YarnGlobals.ExecutionState.Running:
 		return
