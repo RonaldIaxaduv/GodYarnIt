@@ -169,7 +169,9 @@ class Header:
 	pass
 
 
-## A node containing parser statements (e.g. text).
+## The root node of a Yarn dialogue.
+## It contains parser statements (e.g. text) which are created when the node
+## is initialised. It also takes care of ignoring whitespaces.
 ##
 ## Subclass of ParseNode.
 class YarnNode:
@@ -186,15 +188,21 @@ class YarnNode:
 	func _init(name: String, parent: ParseNode, parser: YarnParser):
 		super(parent, parser) # only copies some info, mainly first line number
 		self.name = name
-		while (
-			parser.get_tokens().size() > 0
-			&& !parser.next_token_is( [YarnGlobals.TokenType.Dedent, YarnGlobals.TokenType.EndOfInput] )
-			&& parser.error == OK
-		):
+		
+		while parser.get_tokens().size() > 0 and parser.error == OK:
+			# ignore any whitespace tokens
+			while parser.next_token_is([ YarnGlobals.TokenType.Whitespace ] as Array[int]):
+				parser.expect_token([ YarnGlobals.TokenType.Whitespace ] as Array[int]) # remove from stack
+			
+			# check if end of input has been reached
+			if parser.next_token_is( [YarnGlobals.TokenType.Dedent, YarnGlobals.TokenType.EndOfInput] ):
+				break
+			
+			# create next statement
 			statements.append(Statement.new(self, parser))
 			print("%s statement count: %d" % [name, statements.size()])
 
-	## Empty function. WARNING: DO NOT REMOVE SINCE THIS IS THE WAY WE CHECK CLASS
+	## Empty function. WARNING: DO NOT REMOVE SINCE THIS IS THE WAY WE CHECK THE CLASS
 	func yarn_node():
 		pass
 

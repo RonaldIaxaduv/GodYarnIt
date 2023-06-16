@@ -302,7 +302,8 @@ func tokenize_line(line: String, line_number: int) -> Array[Token]:
 					YarnGlobals.TokenType.Dedent, _current_state, line_number, 0
 				)
 				token_stack.push_front(dedent_token)
-
+	
+	var token_count_pre_eval: int = token_stack.size() # used to determine whether line was empty (after the big while loop)
 	var offset: int = indentation
 
 	var whitespace: RegEx = RegEx.new()
@@ -417,6 +418,13 @@ func tokenize_line(line: String, line_number: int) -> Array[Token]:
 			offset += last_white_space.get_string().length()
 
 	# here: tokenization of the line completed.
+	
+	if token_stack.size() == token_count_pre_eval:
+		# no tokens have been generated while evaluating the line -> line was empty
+		var spacer_token: Token = Token.new(
+			YarnGlobals.TokenType.Whitespace, _current_state, line_number, offset, fresh_line
+		)
+		token_stack.append(spacer_token)
 
 	# if tokenStack.size() >= 1 && (tokenStack.front().token_type == YarnGlobals.TokenType.Text || tokenStack.front().token_type == YarnGlobals.TokenType.Identifier):
 	# 	tokenStack.push_front(Token.new(YarnGlobals.TokenType.EndOfLine,_currentState,lineNumber,column,"break"))
