@@ -1289,8 +1289,8 @@ class ExpressionNode:
 		if !Operator.is_op(stack_operation_type):
 			return false
 
-		var first_info: OperatorInfo = Operator.get_get_op_info(operation_type)
-		var second_info: OperatorInfo = Operator.get_get_op_info(stack_operation_type)
+		var first_info: OperatorInfo = Operator.get_op_info(operation_type)
+		var second_info: OperatorInfo = Operator.get_op_info(stack_operation_type)
 
 		if (
 			first_info.associativity == OperatorInfo.Associativity.Left
