@@ -26,7 +26,7 @@ const YarnProgram = ProgramUtils.YarnProgram
 
 @export var _start_node_title : String = "Start" ## Title of the node which should be executed first in the program.
 @export var _should_auto_start : bool = false ## Value indicating whether the yarn dialogue should start immediately after the YarnRunner has entered the scene tree (end of [method _ready]).
-@export var _variable_storage_path : NodePath ## Path to a VariableStorage node used for storing various values during the execution of the dialogues.
+@export var _variable_storage_path : NodePath ## Path to a YarnVariableStorage node used for storing various values during the execution of the dialogues.
 @export var _compiled_yarn_program : CompiledYarnProgram: ## TODO FIXME: String is a path to a PNG(!?) file in the global filesystem.
 	set = set_compiled_program
 
@@ -66,7 +66,7 @@ func _ready():
 		# currently shown in the editor
 		pass
 	else:
-		_dialogue = YarnDialogue.new(get_node(_variable_storage_path) as VariableStorage)
+		_dialogue = YarnDialogue.new(get_node(_variable_storage_path) as YarnVariableStorage)
 		_dialogue.get_vm().line_handler = Callable(self, "_handle_line")
 		_dialogue.get_vm().options_handler = Callable(self, "_handle_options")
 		_dialogue.get_vm().command_handler = Callable(self, "_handle_command")

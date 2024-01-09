@@ -6,8 +6,12 @@
 ##		 different scenes. ([method convert_to_string_data] and [method populate_from_string_data]
 ##		 provided for this purpose.)
 @icon("res://addons/godyarnit/assets/storage.png")
-class_name VariableStorage
+class_name YarnVariableStorage
 extends Node
+
+
+const Value = preload("res://addons/godyarnit/core/value.gd")
+
 
 # emitted when a call to set_value has been made
 # will also pass in the name of the set value

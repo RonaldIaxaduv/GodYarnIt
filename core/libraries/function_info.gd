@@ -5,7 +5,8 @@
 ## Use [method invoke] to call the function. Pass any args in an untyped array to that method.
 extends Object
 
-# var Value : Script = load("res://addons/godyarnit/core/value.gd")
+
+const Value = preload("res://addons/godyarnit/core/value.gd")
 
 var name: String ## name of the function
 var param_count: int = 0 ## number of parameters that this function takes. Set to -1 to indicate a variable number of parameters.

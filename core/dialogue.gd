@@ -19,7 +19,7 @@ const YarnLibrary = preload("res://addons/godyarnit/core/libraries/library.gd")
 var library: YarnLibrary
 var execution_complete: bool
 
-var _variable_storage: VariableStorage
+var _variable_storage: YarnVariableStorage
 
 var _debug_log: Callable ## calls [method dlog]
 var _err_log: Callable ## calls [method elog]
@@ -31,7 +31,7 @@ var _vm: VirtualMachine
 var _visited_node_counts: Dictionary = {} ## type [String, int] -> (node name, number of times the node has been visited)
 
 
-func _init(variable_storage: VariableStorage):
+func _init(variable_storage: YarnVariableStorage):
 	_variable_storage = variable_storage
 	if !_variable_storage:
 		printerr("Passed variable storage during dialogue initialisation was null!")

@@ -1,4 +1,3 @@
-class_name MarkupRegion
 
 
 # going to strip all the markup from the string

@@ -3,7 +3,9 @@
 ## An object of this class holds a value accessible through [method get_value].
 ## All common unary and binary operators on values are provided
 ## through further methods.
-class_name Value
+
+const Value = preload("res://addons/godyarnit/core/value.gd")
+
 
 const NULL_STRING: String = "null"
 const FALSE_STRING: String = "false"

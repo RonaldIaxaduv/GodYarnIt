@@ -110,7 +110,6 @@ static func combine_programs(programs: Array[YarnProgram] = []) -> YarnProgram:
 		printerr("No programs to combine.")
 		return null
 
-	var YarnProgram = load("res://addons/godyarnit/core/program/program.gd")
 	var p: YarnProgram = YarnProgram.new()
 	for program in programs:
 		for node_key in program.yarn_nodes.keys():
