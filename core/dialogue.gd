@@ -31,12 +31,12 @@ var _vm: VirtualMachine
 var _visited_node_counts: Dictionary = {} ## type [String, int] -> (node name, number of times the node has been visited)
 
 
-func _init(variable_storage: YarnVariableStorage):
+func _init(variable_storage: YarnVariableStorage, function_library_storage: FunctionLibraryStorage):
 	_variable_storage = variable_storage
 	if !_variable_storage:
 		printerr("Passed variable storage during dialogue initialisation was null!")
 	_vm = VirtualMachine.new(self)
-	var YarnLibrary = load("res://addons/godyarnit/core/libraries/library.gd")
+	#var YarnLibrary = load("res://addons/godyarnit/core/libraries/library.gd")
 	#var _variable_storage
 	library = YarnLibrary.new()
 	_debug_log = Callable(self, "dlog")
@@ -47,12 +47,18 @@ func _init(variable_storage: YarnVariableStorage):
 	# this contains math constants, operations and checks
 	var StandardLibrary = load("res://addons/godyarnit/core/libraries/standard.gd")
 	library.import_library(StandardLibrary.new())
-
+	
 	#add a function to lib that checks if node is visited
 	library.register_function("check_visited", -1, Callable(self, "check_node_visited"), true)
 
 	#add function to lib that gets the node visit count
 	library.register_function("visit_count", -1, Callable(self, "get_node_visit_count"), true)
+	
+	# import additional libraries
+	for script: GDScript in function_library_storage.libraries_to_use:
+		var custom_library = script.new()
+		if custom_library is YarnLibrary:
+			library.import_library(custom_library as YarnLibrary)
 
 ## Prints a message. Used for [member _debug_log].
 func dlog(message: String):

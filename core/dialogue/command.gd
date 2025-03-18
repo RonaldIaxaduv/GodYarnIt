@@ -4,7 +4,7 @@
 extends Object
 
 var command: String
-var args: Array[String]
+var args: PackedStringArray #Array[String]
 
 
 func _init(command_and_args: String):

@@ -278,11 +278,11 @@ func _on_dialogue_finished():
 ## like wait.
 ## Called by [signal yarn_runner.command_triggered]
 func _on_command_triggered(command: String, arguments: Array):
-	if command == "wait":		
-		await yarn_runner.resumed
+	if command == "wait":
 		print("GUI is waiting now...")
-		await yarn_runner.resumed
+		await yarn_runner.wait_timer.timeout
 		print("GUI's wait ended.")
+		_display_next_line()
 
 
 ## Displays a number of shortcut options or a dialogue options

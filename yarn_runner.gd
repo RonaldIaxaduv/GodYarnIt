@@ -27,6 +27,7 @@ const YarnProgram = ProgramUtils.YarnProgram
 @export var _start_node_title : String = "Start" ## Title of the node which should be executed first in the program.
 @export var _should_auto_start : bool = false ## Value indicating whether the yarn dialogue should start immediately after the YarnRunner has entered the scene tree (end of [method _ready]).
 @export var _variable_storage_path : NodePath ## Path to a YarnVariableStorage node used for storing various values during the execution of the dialogues.
+@export var _function_library_storage_path: NodePath ## Path to a FunctionLibraryStorage node used for storing subclasses of the library class containing custom functions to use in the yarn dialogues.
 @export var _compiled_yarn_program : CompiledYarnProgram: ## TODO FIXME: String is a path to a PNG(!?) file in the global filesystem.
 	set = set_compiled_program
 
@@ -66,7 +67,7 @@ func _ready():
 		# currently shown in the editor
 		pass
 	else:
-		_dialogue = YarnDialogue.new(get_node(_variable_storage_path) as YarnVariableStorage)
+		_dialogue = YarnDialogue.new(get_node(_variable_storage_path) as YarnVariableStorage, get_node(_function_library_storage_path) as FunctionLibraryStorage)
 		_dialogue.get_vm().line_handler = Callable(self, "_handle_line")
 		_dialogue.get_vm().options_handler = Callable(self, "_handle_options")
 		_dialogue.get_vm().command_handler = Callable(self, "_handle_command")
@@ -211,8 +212,8 @@ func _handle_command(command) -> int:
 			wait_timer.stop()
 		wait_timer.wait_time = time
 		await self.advance_dialogue_triggered
-		print("runner is waiting now...")
 		wait_timer.start()
+		print("runner is waiting now...")
 	else:
 		command_triggered.emit(command.command, command.args)
 

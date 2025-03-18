@@ -131,7 +131,7 @@ func xor(other: Value):
 	if self.type == YarnGlobals.ValueType.Number:
 		return get_script().new(pow(self.as_number(), other.as_number()))
 	
-	return get_script().new(self.as_bool() != self.as_bool())
+	return get_script().new(self.as_bool() != other.as_bool())
 
 
 ## A method for subtracting another value from this value.

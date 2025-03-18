@@ -1,0 +1,14 @@
+[remap]
+
+importer="godyarnit.yarn_file"
+type="Resource"
+uid="uid://bsve3crdsknx4"
+path="res://.godot/imported/feature_testers_full_2.yarn-b0a728d360bae34ced50b42722a41943.tres"
+
+[deps]
+
+source_file="res://addons/godyarnit/examples/feature_testers_full_2.yarn"
+dest_files=["res://.godot/imported/feature_testers_full_2.yarn-b0a728d360bae34ced50b42722a41943.tres"]
+
+[params]
+

@@ -218,7 +218,13 @@ func run_instruction(instruction: Instruction) -> bool:
 				
 				# copy over format function substitutions
 				while expression_count > 0:
-					line.substitutions.append(_state.pop_value().as_string())
+					var value: Value = _state.pop_value()
+					if value != null and value.type != YarnGlobals.ValueType.Nullean:
+						line.substitutions.append(value.as_string())
+					else:
+						# expression functions containing calls to a function
+						# without a return value should be substituted to an empty string
+						line.substitutions.append("")
 					expression_count -= 1
 
 				pass  # TODO: add format function support

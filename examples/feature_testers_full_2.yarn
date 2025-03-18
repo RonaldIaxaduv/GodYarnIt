@@ -1,0 +1,57 @@
+title: Start
+tags:
+---
+
+Please select which feature you would like to test.  #line:85634fce // note: Options need to work for this!
+[[wait | Wait_Test]] #line:c07bf561
+[[Custom Functions | Custom_Functions_Test]] #line:7ad573ad
+
+===
+
+
+
+
+title: Wait_Test
+tags:
+---
+
+Let's test whether waiting works. #line:4e0106
+This <<wait 0.5>> is <<wait 1.0>> a <<wait 3.0>> test. #line:404ff419
+<<set $waiting_time = 3.0>>
+And this is <<wait $waiting_time>> another. #line:ed47d5ec
+Waiting test done! #line:7f50913f
+[[Start]] #line:2a380c30
+
+===
+
+
+
+
+title: Custom_Functions_Test
+tags:
+---
+
+<<set $test_number1 = 10>>
+<<set $test_number2 = 6>>
+<<set $test_bool1 = true>>
+<<set $test_bool2 = false>>
+Let's test whether custom functions work. #line:1b909ae9
+The test numbers are set to {$test_number1} and {$test_number2}. #line:be4e9854
+Standard library: Add({$test_number1}, {$test_number2}) = {Add($test_number1, $test_number2)} #line:be45639a
+Standard library: Modulo({$test_number1}, {$test_number2}) = {Modulo($test_number1, $test_number2)} #line:b09a6d39
+The test bools are set to {$test_bool1} and {$test_bool2}. #line:60059e24
+Standard library: And({$test_bool1}, {$test_bool2}) = {And($test_bool1, $test_bool2)} #line:6cfd5d9e
+Standard library: Xor({$test_bool1}, {$test_bool2}) = {Xor($test_bool1, $test_bool2)} #line:9ce9d510
+Randomisation library: GetRandomFloat() = {GetRandomFloat()} #line:fa48f004
+Randomisation library: GetRandomIntInRange({$test_number1}, {$test_number2}) = {GetRandomIntInRange($test_number1, $test_number2)} #line:6d686dd2
+Randomisation library: PrintRandomInt(){PrintRandomInt()} #line:13e2ce03
+Setting two more test values using functions: <<set $test_bool3 = Xor($test_bool1, $test_bool2)>> <<set $test_float = GetRandomFloat()>> #line:96888765
+Results: test_bool3 = {$test_bool3}, test_float = {$test_float}. #line:a05e042d
+Here's an automatically formatted {Apple(1, false)}. #line:869c2b46
+Here are even more auto-formatted {Apple(2, false)}. #line:70a29f44
+{Apple(2, true)}. That's right. #line:2d01d01d
+And here's an {Apple_NoArgs()} formatted without args. #line:24b03fd1 
+Custom functions test done! #line:a62f3b36
+[[Start]] #line:157f4660
+
+===
