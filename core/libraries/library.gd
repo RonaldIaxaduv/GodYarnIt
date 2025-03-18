@@ -12,7 +12,7 @@ func get_function(name: String) -> FunctionInfo:
 	if functions.has(name):
 		return functions[name]
 	else:
-		printerr("Invalid Function: %s" % name)
+		printerr("Missing function: %s" % name)
 		return null
 
 

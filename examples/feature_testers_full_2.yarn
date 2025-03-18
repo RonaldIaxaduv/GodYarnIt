@@ -44,13 +44,14 @@ Standard library: And({$test_bool1}, {$test_bool2}) = {And($test_bool1, $test_bo
 Standard library: Xor({$test_bool1}, {$test_bool2}) = {Xor($test_bool1, $test_bool2)} #line:9ce9d510
 Randomisation library: GetRandomFloat() = {GetRandomFloat()} #line:fa48f004
 Randomisation library: GetRandomIntInRange({$test_number1}, {$test_number2}) = {GetRandomIntInRange($test_number1, $test_number2)} #line:6d686dd2
+Randomisation library: GetRandomIntOptionalArgs(2, {$test_number2}) = {GetRandomIntOptionalArgs(2, $test_number2)} #line:8222ba5e 
 Randomisation library: PrintRandomInt(){PrintRandomInt()} #line:13e2ce03
 Setting two more test values using functions: <<set $test_bool3 = Xor($test_bool1, $test_bool2)>> <<set $test_float = GetRandomFloat()>> #line:96888765
 Results: test_bool3 = {$test_bool3}, test_float = {$test_float}. #line:a05e042d
 Here's an automatically formatted {Apple(1, false)}. #line:869c2b46
 Here are even more auto-formatted {Apple(2, false)}. #line:70a29f44
 {Apple(2, true)}. That's right. #line:2d01d01d
-And here's an {Apple_NoArgs()} formatted without args. #line:24b03fd1 
+And here's an {Apple_NoArgs()} formatted without args. #line:24b03fd1
 Custom functions test done! #line:a62f3b36
 [[Start]] #line:157f4660
 

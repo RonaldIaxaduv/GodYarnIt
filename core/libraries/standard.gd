@@ -4,6 +4,9 @@
 extends "res://addons/godyarnit/core/libraries/library.gd"
 
 
+const Value = preload("res://addons/godyarnit/core/value.gd")
+
+
 func _init():
 	register_function("Add", 2, Callable(self, "add"), true)
 	register_function("Minus", 2, Callable(self, "sub"), true)
@@ -23,65 +26,65 @@ func _init():
 	register_function("Not", 1, Callable(self, "lnot"), true)
 
 
-func add(param1, param2):
+func add(param1: Value, param2: Value):
 	return param1.add(param2)
 
 
-func sub(param1, param2):
+func sub(param1: Value, param2: Value):
 	return param1.sub(param2)
 
 
-func unary_minus(param1):
+func unary_minus(param1: Value):
 	return param1.negative()
 
 
-func div(param1, param2):
+func div(param1: Value, param2: Value):
 	return param1.div(param2)
 
 
-func mul(param1, param2):
+func mul(param1: Value, param2: Value):
 	return param1.mult(param2)
 
 
-func mod(param1, param2):
+func mod(param1: Value, param2: Value):
 	return param1.mod(param2)
 
 
-func equal(param1, param2):
+func equal(param1: Value, param2: Value):
 	return param1.equals(param2)
 
 
-func noteq(param1, param2):
+func noteq(param1: Value, param2: Value):
 	return !param1.equals(param2)
 
 
-func ge(param1, param2):
+func ge(param1: Value, param2: Value):
 	return param1.greater(param2)
 
 
-func geq(param1, param2):
+func geq(param1: Value, param2: Value):
 	return param1.geq(param2)
 
 
-func le(param1, param2):
+func le(param1: Value, param2: Value):
 	return param1.less(param2)
 
 
-func leq(param1, param2):
+func leq(param1: Value, param2: Value):
 	return param1.leq(param2)
 
 
-func land(param1, param2):
+func land(param1: Value, param2: Value):
 	return param1.as_bool() && param2.as_bool()
 
 
-func lor(param1, param2):
+func lor(param1: Value, param2: Value):
 	return param1.as_bool() || param2.as_bool()
 
 
-func xor(param1, param2):
+func xor(param1: Value, param2: Value):
 	return param1.xor(param2)
 
 
-func lnot(param1):
+func lnot(param1: Value):
 	return !param1.as_bool()

@@ -14,6 +14,7 @@
         2.  [Compiled Yarn Program](#CompiledYarnProgram)
         3.  [Yarn Runner](#orgdbcf403)
         4.  [GUI Display](#orge8fe07e)
+        5. [Function Library Storage](#orge8fe07f)
 
 
 
@@ -215,16 +216,50 @@ GodYarnIt, like GDYarn, comes with a default GUI implementation which will be ex
     -   `gui_hidden`: Emitted when `hide_gui()` is called.
 
 
+<a id="orge8fe07f"></a>
+
 ### Function Library Storage
 
 The **Function Library Storage** node is allows you to add functions with custom names that can be called from within your Yarn script files.
 
-It contains an array of GDScript resources. These need to be subclasses of the library class (`//core/libraries/library.gd`). Feel free to use the Standard library (`//core/libraries/standard.gd`) as a reference.
+It contains an array of GDScript resources. These need to be subclasses of the library class (`//core/libraries/library.gd`). Feel free to use the Standard library (`//core/libraries/standard.gd`) or the code section below as a reference.
 
 In order for the functions to be loaded, the Yarn Runner needs to hold a reference to a Function Library Storage - as for the Variable Storage, there is an export variable for this. The Yarn Runner will automatically import all libraries contained in the referenced Function Library Storage node.
 
 The following kinds of functions are supported:
-- functions without arguments: `{Foo()}`
-- functions with a set number of arguments `{Foo($arg1, 2)}`
-- functions with a variable number of arguments: `{Foo()}`, `{Foo($arg1, $arg2)}`
-- functions without a return value: `{Foo()}` (these will turn into empty strings)
+- functions without arguments: `{Foo1()}`
+- functions with a set number of arguments `{Foo2($arg1, 2)}`
+- functions with a variable number of arguments: `{Foo3()}`, `{Foo3($arg1, $arg2)}`
+- functions without a return value: `{Foo4()}` (these will turn into empty strings)
+
+In the code, they would look like this:
+```GDScript
+extends "res://addons/godyarnit/core/libraries/library.gd"
+
+const Value = preload("res://addons/godyarnit/core/value.gd")
+
+func _init():
+	register_function("Foo1", 0, Callable(self, "get_random_float"), true)
+	register_function("Foo2", 2, Callable(self, "get_random_int_in_range"), true)
+	register_function("Foo3", 2, Callable(self, "get_random_int_optional_args"), true)
+	register_function("Foo4", 0, Callable(self, "print_random_int"), false)
+
+
+## Returns a random number between 0.0 and 1.0 (inclusive)
+func get_random_float() -> float:
+	return randf()
+
+## Returns a random number between min and max (inclusive)
+func get_random_int(min: Value, max: Value) -> int:
+	return randi_range(min.as_number(), max.as_number())
+
+## Returns a random int between min and max, uses defaults if no args given
+func get_random_int_optional_args(min = 0, max = 10) -> int:
+	var min_to_use: int = min.as_number() if min is Value else min
+	var max_to_use: int = max.as_number() if max is Value else max
+	return randi_range(min_to_use, max_to_use)
+
+## Prints a random int without returning anything
+func print_random_int() -> void:
+	print("Here's a random int: %d" % [randi()])
+```
