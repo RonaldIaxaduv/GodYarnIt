@@ -55,10 +55,11 @@ func _init(variable_storage: YarnVariableStorage, function_library_storage: Func
 	library.register_function("visit_count", -1, Callable(self, "get_node_visit_count"), true)
 	
 	# import additional libraries
-	for script: GDScript in function_library_storage.libraries_to_use:
-		var custom_library = script.new()
-		if custom_library is YarnLibrary:
-			library.import_library(custom_library as YarnLibrary)
+	if function_library_storage != null:
+		for script: GDScript in function_library_storage.libraries_to_use:
+			var custom_library = script.new()
+			if custom_library is YarnLibrary:
+				library.import_library(custom_library as YarnLibrary)
 
 ## Prints a message. Used for [member _debug_log].
 func dlog(message: String):
