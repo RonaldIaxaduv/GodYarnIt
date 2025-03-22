@@ -164,11 +164,14 @@ func stop():
 ## Compiles the yarn programs stored in [member _compiled_yarn_program],
 ## saves them to the disk and returns the compiled program.
 func _compile_programs(show_tokens: bool, print_tree: bool) -> YarnProgram:
-	if !_compiled_yarn_program:
+	if _compiled_yarn_program == null:
 		printerr("Unable to compile programs. Missing CompiledYarnProgram resource in YarnRunner.")
 		return null
 	var program: YarnProgram = _compiled_yarn_program._compile_programs(show_tokens, print_tree)
-	_compiled_yarn_program._save_compiled_program(program)
+	
+	if program != null:
+		_compiled_yarn_program._save_compiled_program(program)
+		print("The Yarn program has been saved.")
 	
 	return program
 
@@ -211,7 +214,7 @@ func _handle_command(command) -> int:
 		if wait_timer.paused or not wait_timer.is_stopped():
 			wait_timer.stop()
 		wait_timer.wait_time = time
-		await self.advance_dialogue_triggered
+		#await self.advance_dialogue_triggered
 		wait_timer.start()
 		print("runner is waiting now...")
 	else:

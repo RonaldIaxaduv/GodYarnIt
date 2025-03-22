@@ -10,6 +10,7 @@
 
 # const YarnGlobals = preload("res://addons/godyarnit/autoloads/execution_states.gd")
 
+const Parser = preload("res://addons/godyarnit/core/compiler/parser.gd")
 const Lexer = preload("res://addons/godyarnit/core/compiler/lexer.gd")
 const LineInfo = preload("res://addons/godyarnit/core/program/yarn_string_container.gd")
 const CompiledYarnNode = preload("res://addons/godyarnit/core/program/compiled_yarn_node.gd")
@@ -37,7 +38,7 @@ var _last_error: int
 var _current_node: CompiledYarnNode
 var _is_raw_text: bool
 var _program: YarnProgram
-var _file_name: String
+var _source_code_path: String
 var _contains_implicit_string_tags: bool
 var _label_count: int = 0
 
@@ -49,55 +50,50 @@ var _tokens: Dictionary = {} # type [int, YarnGlobals.TokenType]
 
 ## Takes a yarn source code string and
 ## converts each of its dialogues into lexical tokens (using the lexer script),
-## then converts these tokens into Parser.YarnNode objects (using the parser script),
+## then converts these tokens into Parser.YarnDialogueNode objects (using the parser script),
 ## and finally converts the yarn nodes into a compiled program (using this compiler script),
 ## i.e. a sequence of instructions and values on a stack.
 ## Returns OK or an error code.
-static func compile_string(
+func compile_string(
 	source_code: String,
-	file_name: String,
-	program: YarnProgram,
+	source_code_path: String,
 	show_tokens: bool = false,
 	print_tree: bool = false
-) -> int:
-	var Parser = load("res://addons/godyarnit/core/compiler/parser.gd")
-	var Compiler = load("res://addons/godyarnit/core/compiler/compiler.gd")
+) -> Error:
+	_source_code_path = source_code_path
 
-	var compiler = Compiler.new()
-	compiler._file_name = file_name
-
-	# parse yarn nodes
-	
-	# parse header 
+	# parse header
 	var header_separator: RegEx = RegEx.new()
 	header_separator.compile("---(\r\n|\r|\n)")
 	var header_property: RegEx = RegEx.new()
 	header_property.compile("(?<field>.*): *(?<value>.*)")
 
 	if !header_separator.search(source_code):
-		printerr("Error parsing yarn input : No headers found")
+		printerr("Compiler.compile_string: no headers found in file %s -> aborted." % source_code_path)
 		return ERR_FILE_UNRECOGNIZED
-
-	var line_number: int = 0
 
 	# prepare source code: separate into lines and remove unneeded whitespace
 	var source_lines: PackedStringArray = source_code.split("\n", true)
 	for i in range(source_lines.size()):
 		source_lines[i] = source_lines[i].strip_edges(false, true) # keep indents on left, remove whitespace on right
 
-	# convert source code into YarnParser.YarnNode objects
+	# convert source code into YarnParser.YarnDialogueNode objects
 	# each dialogue in the source code will be converted into
 	# a separate tree of yarn nodes
-	var dialogue_root_nodes: Array[YarnParser.YarnNode] = []
+	var dialogue_root_nodes: Array[YarnParser.YarnDialogueNode] = []
+	var line_number: int = 0
+	var body_start_line: int
 	while line_number < source_lines.size():
-		var title: String
-		var body: String
+		var dialogue_title: String
+		var dialogue_body: String
 
 		# get title: in the header, search for a property called "title".
 		# it will be of the form "title: [value]"
-		while true:
+		var headers_parsed: bool = false
+		var title_found: bool = false
+		while line_number < source_lines.size():
 			var current_line: String = source_lines[line_number]
-			# print(sourceLines[lineNumber])
+			# print(sourceLines[line_number])
 			line_number += 1
 
 			if !current_line.is_empty():
@@ -108,61 +104,88 @@ static func compile_string(
 
 					if field == "title":
 						# title property found!
-						title = value
+						dialogue_title = value
+						title_found = true
+						#print("Title found in line %d: %s" % [line_number, dialogue_title])
 						# no not break here; read the rest of the header to correctly update line_number
 
 			if line_number >= source_lines.size() || source_lines[line_number] == "---":
+				headers_parsed = true
+				#print("End of headers found in line %d" % [line_number])
 				break
+
+		if not headers_parsed:
+			printerr("Compiler.compile_string: no headers found in file %s -> aborted." % source_code_path)
+			return ERR_FILE_UNRECOGNIZED
+		if not title_found:
+			printerr("Compiler.compile_string: no title found in file %s -> aborted." % source_code_path)
+			return ERR_FILE_UNRECOGNIZED
+
 		# past header
-		
+
 		line_number += 1 # skip the "---" line
-		
+		body_start_line = line_number
+
 		# get lines in body
 		var body_lines: PackedStringArray = []
 		while line_number < source_lines.size() && source_lines[line_number] != "===":
 			body_lines.append(source_lines[line_number])
 			line_number += 1
-		body = String("\n").join(body_lines)
-		
+		dialogue_body = String("\n").join(body_lines)
+
 		line_number += 1
-		
+
 		# run lexer on the body to convert it into Lexer.Token objects (lexical tokens)
 		var lexer = Lexer.new()
-		var tokens: Array = lexer.tokenize(body, 0)
+		var tokens: Array = lexer.tokenize(dialogue_body, 0)
 		if lexer.error != OK:
-			printerr("Failed to tokenize the Node [%s] in file: %s." % [title, file_name])
+			printerr("Compiler.compile_string: failed to tokenize dialogue node [%s] in file: %s." % [dialogue_title, source_code_path])
 			return lexer.error
 
 		if show_tokens:
-			print_tokens(title, tokens)
+			print_tokens(dialogue_title, tokens)
 
-		# run parser on the tokens to convert them into YarnParser.YarnNode objects
+		#print("TOKENS OF DIALOGUE %d CREATED SUCCESSFULLY" % [dialogue_root_nodes.size()])
+		#return ERR_UNAVAILABLE
+
+		# run parser on the tokens to convert them into YarnParser.YarnDialogueNode objects
 		var parser = Parser.new(tokens)
-		var root_node: YarnParser.YarnNode = parser.parse_node(title) # automatically creates tree of yarn nodes using the tokens
+		var root_node: YarnParser.YarnDialogueNode = parser.parse_node(dialogue_title, body_start_line) # automatically creates tree of yarn nodes using the tokens
 		if parser.error != OK:
-			printerr("Failed to parse Node [%s] in file: %s." % [title, file_name])
+			printerr("Failed to parse dialogue node [%s] in file: %s." % [dialogue_title, source_code_path])
 			return parser.error
 
 		if print_tree:
 			print(root_node.get_tree_string(0))
 
 		dialogue_root_nodes.append(root_node)
-		while line_number < source_lines.size() && source_lines[line_number].is_empty():
+		while line_number < source_lines.size() and source_lines[line_number].is_empty():
 			line_number += 1
-		
+
 		# -> parse next dialogue
 
 	# finished parsing nodes
+	#print("Finished parsing: %d nodes parsed." % [dialogue_root_nodes.size()])
 
 	# compile nodes into a program (set of instructions and values on a stack)
+	_program = YarnProgram.new()
 	for node in dialogue_root_nodes:
-		compiler.compile_node(program, node)
-		if compiler.error != OK:
-			printerr("Failed to compile Node [%s] in file: %s." % [node.name, file_name])
-			return compiler.error
+		compile_node(node)
+		if error != OK:
+			printerr("Compiler.compile_string: failed to compile dialogue node %s in file: %s %s" % [
+				node.dialogue_section_name,
+				source_code_path,
+				node.get_location_string()
+			])
+			return error
+		#else:
+			#print("Compiled dialogue %s. Final number of instructions: %d" % [
+				#node.dialogue_section_name,
+				#(_program.yarn_nodes[node.dialogue_section_name] as CompiledYarnNode).instructions.size()
+			#])
 
-	copy_registered_strings(program.yarn_strings, compiler._registered_string_table)
-
+	copy_registered_strings(_program.yarn_strings, _registered_string_table)
+	
 	return OK
 
 
@@ -176,52 +199,74 @@ static func copy_registered_strings(target: Dictionary, patch: Dictionary):
 ## Compiles the instructions for a yarn node by compiling
 ## all statements within and options (other linked dialogues).
 ## This will first be called on each dialogue root node.
-func compile_node(program: YarnProgram, parsed_node: YarnParser.YarnNode) -> void:
-	if program.yarn_nodes.has(parsed_node.name):
+func compile_node(parsed_node: YarnParser.YarnDialogueNode) -> void:
+	#print("Compiler.compile_node: compiling dialogue node %s (%d statements)" % [
+		#parsed_node.dialogue_section_name,
+		#parsed_node.statements.size()
+	#])
+
+	if _program.yarn_nodes.has(parsed_node.dialogue_section_name):
 		# emit_error(DUPLICATE_NODES_IN_PROGRAM)
 		error = ERR_ALREADY_EXISTS
-		printerr("Duplicate node in program: %s" % parsed_node.name)
+		printerr("Duplicate node in program: %s" % parsed_node.dialogue_section_name)
+		return
+	
+	var compiled_node: CompiledYarnNode = CompiledYarnNode.new()
+
+	compiled_node.node_name = parsed_node.dialogue_section_name
+	compiled_node.tags = parsed_node.tags
+
+	# raw text
+	if parsed_node.source != null and not parsed_node.source.is_empty():
+		# node provides a source -> store as string under the ID "line:[dialogue name]"
+		#print("\tNode provides a source (%s) -> storing string under line:%s" % [
+			#parsed_node.source,
+			#parsed_node.dialogue_section_name
+		#])
+		compiled_node.source_id = register_string(
+			parsed_node.source,
+			parsed_node.dialogue_section_name,
+			"line:" + parsed_node.dialogue_section_name,
+			0,
+			[]
+		)
 	else:
-		var compiled_node: CompiledYarnNode = CompiledYarnNode.new()
+		# compile node
+		var start_label: String = register_label()
+		add_instruction(YarnGlobals.ByteCode.Label, compiled_node, [Operand.new(start_label)])
 
-		compiled_node.node_name = parsed_node.name
-		compiled_node.tags = parsed_node.tags
+		for statement in parsed_node.statements:
+			compile_statement(compiled_node, statement) # automatically parses the entire node tree belonging to this statement
+			if error != OK:
+				printerr("Compiler.compile_node: failed to compile statement for dialogue %s %s" % [
+					parsed_node.dialogue_section_name,
+					statement.get_location_string()
+				])
+				return
+			#else:
+				#print("\tCompiled statement. Current number of instructions: %d" % [compiled_node.instructions.size()])
+		
+		# add options
+		# TODO: add parser flag
 
-		# raw text
-		if parsed_node.source != null && !parsed_node.source.is_empty():
-			# node provides a source -> store as string under the ID "line:[node name]"
-			compiled_node.source_id = register_string(
-				parsed_node.source, parsed_node.name, "line:" + parsed_node.name, 0, []
-			)
+		# var hasOptions : bool = false
+
+		# for instruction in nodeCompiled.instructions :
+		# 	if instruction.operation == YarnGlobals.ByteCode.AddOption:
+		# 		hasOptions = true
+		# 	if instruction.operation == YarnGlobals.ByteCode.ShowOptions:
+		# 		hasOptions = false
+
+		# dialogue has finished
+		if !parsed_node.has_options:
+			# no options (= other dialogues that are linked in this one) -> stop
+			add_instruction(YarnGlobals.ByteCode.Stop, compiled_node)
 		else:
-			# compile node
-			var start_label: String = register_label()
-			add_instruction(YarnGlobals.ByteCode.Label, compiled_node, [Operand.new(start_label)])
+			# options found -> show option text, then jump to selected
+			add_instruction(YarnGlobals.ByteCode.ShowOptions, compiled_node)
+			add_instruction(YarnGlobals.ByteCode.RunNode, compiled_node)
 
-			for statement in parsed_node.statements:
-				compile_statement(compiled_node, statement) # automatically parses the entire node tree belonging to this statement
-
-			# add options
-			# TODO: add parser flag
-
-			# var hasOptions : bool = false
-
-			# for instruction in nodeCompiled.instructions :
-			# 	if instruction.operation == YarnGlobals.ByteCode.AddOption:
-			# 		hasOptions = true
-			# 	if instruction.operation == YarnGlobals.ByteCode.ShowOptions:
-			# 		hasOptions = false
-			
-			# dialogue has finished
-			if !parsed_node.has_options:
-				# no options (= other dialogues that are linked in this one) -> stop
-				add_instruction(YarnGlobals.ByteCode.Stop, compiled_node)
-			else:
-				# options found -> show option text, then jump to selected
-				add_instruction(YarnGlobals.ByteCode.ShowOptions, compiled_node)
-				add_instruction(YarnGlobals.ByteCode.RunNode, compiled_node)
-
-		program.yarn_nodes[compiled_node.node_name] = compiled_node
+	_program.yarn_nodes[parsed_node.dialogue_section_name] = compiled_node
 
 
 ## Stores a provided string (along with some other info) in the
@@ -247,8 +292,8 @@ func register_string(
 		# generate an implicit tag
 		# they are not saved and are generated
 		# aka dummy tags that change on each compilation
-		
-		used_line_id = "%s-%s-%d" % [_file_name.get_file(), node_name, _implicit_string_count]
+
+		used_line_id = "%s-%s-%d" % [_source_code_path.get_file(), node_name, _implicit_string_count]
 		_implicit_string_count += 1
 		_contains_implicit_string_tags = true
 		is_implicit = true
@@ -257,7 +302,7 @@ func register_string(
 		is_implicit = false
 
 	var stored_string_info: LineInfo = LineInfo.new(
-		text_to_store, node_name, line_number, _file_name.get_file(), is_implicit, tags
+		text_to_store, node_name, line_number, _source_code_path.get_file(), is_implicit, tags
 	)
 	_registered_string_table[used_line_id] = stored_string_info
 
@@ -278,8 +323,8 @@ func register_label(comment: String = "") -> String:
 func add_instruction(op_bytecode: int, compiled_node: CompiledYarnNode = _current_node, operands: Array[Operand] = []):
 	var instruction: Instruction = Instruction.new(null)
 	instruction.operation = op_bytecode
-	instruction.operands = operands 
-	# print("emitting instruction to %s"%node.nodeName)
+	instruction.operands = operands
+	# print("emitting instruction to %s" % node.node_name)
 
 	if compiled_node == null:
 		printerr("trying to emit to null node with byte code: %s" % op_bytecode)
@@ -305,7 +350,7 @@ func compile_header():
 ## Compiles the instructions for a statement (if statement, assignment, line,...).
 ## This will walk through all child branches
 ## of the parse tree.
-func compile_statement(node: CompiledYarnNode, statement: YarnParser.Statement):
+func compile_statement(node: CompiledYarnNode, statement: YarnParser.Statement) -> void:
 	#print("compiling statement")
 	match statement.statement_type:
 		YarnGlobals.StatementTypes.CustomCommand:
@@ -324,16 +369,13 @@ func compile_statement(node: CompiledYarnNode, statement: YarnParser.Statement):
 			compile_line(node, statement, statement.line)
 		_:
 			error = ERR_COMPILATION_FAILED
-			printerr("illegal statement type [%s]- could not generate code" % statement.type)
-
-	pass
-
+			printerr("Compiler.compile_statement: illegal statement type [%s] - could not generate code" % statement.type)
 
 ## Compiles the instructions for a block.
 ## Blocks are a group of statements.
 func compile_block(node: CompiledYarnNode, statements: Array[YarnParser.Statement] = []):
 	#print("compiling block")
-	if !statements.is_empty():
+	if not statements.is_empty():
 		for statement in statements:
 			compile_statement(node, statement)
 
@@ -341,7 +383,7 @@ func compile_block(node: CompiledYarnNode, statements: Array[YarnParser.Statemen
 ## Compiles the instructions for an if statement.
 func compile_if(node: CompiledYarnNode, if_statement: YarnParser.IfStatement):
 	#print("compiling if")
-	
+
 	# jump to label at the end of every clause
 	var endif_label: String = register_label("endif")
 
@@ -352,7 +394,7 @@ func compile_if(node: CompiledYarnNode, if_statement: YarnParser.IfStatement):
 			# compile condition evaluation
 			compile_expression(node, clause.expression)
 			add_instruction(YarnGlobals.ByteCode.JumpIfFalse, node, [Operand.new(end_of_clause_label)])
-		
+
 		# For when the condition is fulfilled, compile block of follow-up statements.
 		# Afterwards, jump to the end of the if statement.
 		compile_block(node, clause.statements)
@@ -392,14 +434,14 @@ func compile_shortcut_group(node: CompiledYarnNode, shortcut_group: YarnParser.S
 
 		while !option.option_line.substitutions.is_empty():
 			# compile any expressions within the shortcut option's text line
-			var inline_format_expression = option.option_line.substitutions.pop_back() # can be InlineExpression or FormatExpression
+			var inline_format_expression: Parser.ParseNode = option.option_line.substitutions.pop_back() # can be InlineExpression or FormatExpression
 			# TODO FIXME: ^ this might cause problems, because if this is a FormatExpression, expression_value is an InlineExpression, not an ExpressionNode!
 			compile_expression(node, inline_format_expression.expression_value)
-		
+
 		# register the line of text for this option
 		var line_id: String = option.option_line.line_id
 		var registered_line_id_string: String = register_string(
-			option.option_line.line_text, node.node_name, line_id, option.line_number, node.tags
+			option.option_line.line_text, node.node_name, line_id, option.node_line_number, node.tags
 		)
 
 		add_instruction(
@@ -429,7 +471,7 @@ func compile_shortcut_group(node: CompiledYarnNode, shortcut_group: YarnParser.S
 		if option.sub_node != null:
 			# compile sub-block of this shortcut option
 			compile_block(node, option.sub_node.statements)
-		
+
 		# after the sub-block has been executed (or if there is no sub-block),
 		# jump to the end of the shortcut option group
 		add_instruction(YarnGlobals.ByteCode.JumpTo, node, [Operand.new(group_end_label)])
@@ -455,7 +497,7 @@ func compile_line(node: CompiledYarnNode, statement: YarnParser.Statement, line:
 		compile_expression(node, inline_format_expression.expression_value)
 
 	var registered_line_id: String = register_string(
-		line.line_text, node.node_name, line.line_id, statement.line_number, line.tags
+		line.line_text, node.node_name, line.line_id, statement.node_line_number, line.tags
 	)
 	add_instruction(YarnGlobals.ByteCode.RunLine, node, [Operand.new(registered_line_id), Operand.new(expression_count)])
 
@@ -472,7 +514,7 @@ func compile_option(node: CompiledYarnNode, option: YarnParser.OptionStatement):
 		# display option text, link destination node
 		var line_id: String = option.displayed_line.line_id
 		var registered_line_id = register_string(
-			option.displayed_line.line_text, node.node_name, line_id, option.line_number, option.displayed_line.tags
+			option.displayed_line.line_text, node.node_name, line_id, option.node_line_number, option.displayed_line.tags
 		)
 
 		var expression_count: int = option.displayed_line.substitutions.size()
@@ -493,7 +535,7 @@ func compile_option(node: CompiledYarnNode, option: YarnParser.OptionStatement):
 ## Compiles instructions for a custom command.
 func compile_custom_command(node: CompiledYarnNode, command: YarnParser.CustomCommand):
 	#print("compiling custom command")
-	
+
 	if command.expression != null:
 		# compile function call
 		compile_expression(node, command.expression)
@@ -506,7 +548,7 @@ func compile_custom_command(node: CompiledYarnNode, command: YarnParser.CustomCo
 ## Compiles instructions for assigning values.
 func compile_assignment(node: CompiledYarnNode, assignment: YarnParser.Assignment):
 	#print("compiling assignment")
-	
+
 	if assignment.operation_type == YarnGlobals.TokenType.EqualToOrAssign:
 		# evaluate the expression to a value for the stack
 		compile_expression(node, assignment.value)
@@ -546,7 +588,10 @@ func compile_assignment(node: CompiledYarnNode, assignment: YarnParser.Assignmen
 					[Operand.new(YarnGlobals.token_name(YarnGlobals.TokenType.DivideAssign))]
 				)
 			_:
-				printerr("Invalid assignment operator detected while compiling assignment.")  # FIXME add more error information
+				printerr("Compiler.compile_assignment: invalid assignment operator detected while compiling assignment: %d (node %s)" % [
+					assignment.operation_type,
+					node.node_name
+				])
 				error = ERR_INVALID_DATA
 
 	# stack contains destination value
@@ -560,7 +605,7 @@ func compile_assignment(node: CompiledYarnNode, assignment: YarnParser.Assignmen
 ## Compiles instructions for an expression.
 func compile_expression(node: CompiledYarnNode, expression: YarnParser.ExpressionNode):
 	#print("compiling expression")
-	
+
 	# expression = value || func call
 	match expression.expression_type:
 		YarnGlobals.ExpressionType.Value:
@@ -576,7 +621,10 @@ func compile_expression(node: CompiledYarnNode, expression: YarnParser.Expressio
 			# call function
 			add_instruction(YarnGlobals.ByteCode.CallFunc, node, [Operand.new(expression.function_name)])
 		_:
-			printerr("Unable to generate expression while compiling")
+			printerr("Compiler.compile_expression: invalid expression type %d (node %s)" % [
+				expression.expression_type,
+				node.node_name
+			])
 			error = ERR_INVALID_DATA
 
 	pass
@@ -585,14 +633,14 @@ func compile_expression(node: CompiledYarnNode, expression: YarnParser.Expressio
 ## Compiles instructions for a value.
 func compile_value(node: CompiledYarnNode, value: YarnParser.ValueNode):
 	#print("compiling value")
-	
+
 	# push value to stack
 	match value.value.type:
 		YarnGlobals.ValueType.Number:
 			add_instruction(YarnGlobals.ByteCode.PushNumber, node, [Operand.new(value.value.as_number())])
 		YarnGlobals.ValueType.Str:
 			var id: String = register_string(
-				value.value.as_string(), node.nodeName, "", value.lineNumber, []
+				value.value.as_string(), node.node_name, "", value.node_line_number, []
 			)
 			add_instruction(YarnGlobals.ByteCode.PushString, node, [Operand.new(id)])
 		YarnGlobals.ValueType.Boolean:
@@ -602,7 +650,10 @@ func compile_value(node: CompiledYarnNode, value: YarnParser.ValueNode):
 		YarnGlobals.ValueType.Nullean:
 			add_instruction(YarnGlobals.ByteCode.PushNull, node)
 		_:
-			printerr("Unrecognized value node type: %s" % value.value.type)
+			printerr("Compiler.compile_value: unrecognized value node type: %s (node %s)" % [
+				value.value.type,
+				node.node_name
+			])
 			error = ERR_INVALID_DATA
 
 
@@ -626,7 +677,7 @@ func clear_errors() -> void:
 #	_errors |= _lastError
 
 
-## Prints the tokens in the given token array. 
+## Prints the tokens in the given token array.
 static func print_tokens(node_name: String, tokens: Array[Lexer.Token] = []):
 	var list: PackedStringArray = []
 	for token in tokens:

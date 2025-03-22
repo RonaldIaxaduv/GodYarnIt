@@ -8,7 +8,7 @@ extends Object
 const Instruction = preload("res://addons/godyarnit/core/program/instruction.gd")
 
 
-var node_name: String ## will be set to YarnParser.YarnNode.name
+var node_name: String ## will be set to YarnParser.YarnDialogueNode.dialogue_section_name
 var instructions: Array[Instruction] = [] ## stack containing objects of instruction.gd. The code of the node is executed using these instructions.
 var labels: Dictionary ## type [String, int] -> (label name, index on instructions stack)
 var tags: Array[String] ## will be set to YarnParser.ParseNode.tags

@@ -107,14 +107,14 @@ static func _serialize_program(program: YarnProgram) -> Dictionary:
 ## Returns null of there are any duplicate node names.
 static func combine_programs(programs: Array[YarnProgram] = []) -> YarnProgram:
 	if programs.is_empty():
-		printerr("No programs to combine.")
+		printerr("ProgramUtils.combine_programs: no programs to combine.")
 		return null
-
+	
 	var p: YarnProgram = YarnProgram.new()
 	for program in programs:
 		for node_key in program.yarn_nodes.keys():
 			if p.has_yarn_node(node_key):
-				printerr("Program with duplicate node names %s " % node_key)
+				printerr("ProgramUtils.combine_programs: found duplicate dialogue node names %s " % node_key)
 				return null
 			p.yarn_nodes[node_key] = program.yarn_nodes[node_key]
 
@@ -128,8 +128,15 @@ static func combine_programs(programs: Array[YarnProgram] = []) -> YarnProgram:
 static func _serialize_all_nodes(nodes: Dictionary) -> Array[Dictionary]:
 	# type of nodes is [String, CompiledYarnNode] -> (id, compiled yarn node)
 	var result: Array[Dictionary] = []
-
+	
+	#print("ProgramUtils: serialising yarn nodes...")
+	
 	for node in nodes.values():
+		#print("\t%s (%d instructions)" % [
+			#(node as CompiledYarnNode).node_name,
+			#(node as CompiledYarnNode).instructions.size()
+		#])
+		
 		var node_data: Dictionary = {}
 		# node_name : String
 		# instructions : Array = []
@@ -144,7 +151,9 @@ static func _serialize_all_nodes(nodes: Dictionary) -> Array[Dictionary]:
 		node_data[NODE_SOURCE_ID] = (node as CompiledYarnNode).source_id
 
 		result.append(node_data)
-
+	
+	#print("ProgramUtils: yarn nodes have been serialised.")
+	
 	return result
 
 

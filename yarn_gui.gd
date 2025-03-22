@@ -35,6 +35,8 @@ signal gui_hidden ## A signal emitted when `hide_gui` has been called.
 
 @export var _text_speed : int = 1 ## Controls the rate at which the text is displayed.
 
+@export var restart_dialogue_after_finished: bool = false
+
 
 const YarnRunner = preload("res://addons/godyarnit/yarn_runner.gd")
 
@@ -221,9 +223,12 @@ func finish_line():
 		return
 
 	if dialogue_has_finished:
-		hide_gui()
-		print("line cannot be finished: dialogue has already finished")
-		return
+		if restart_dialogue_after_finished:
+			yarn_runner.start()
+		else:
+			hide_gui()
+			print("line cannot be finished: dialogue has already finished")
+			return
 
 	if line_has_finished:
 		print("line has already finished displaying.")
