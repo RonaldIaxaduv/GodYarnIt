@@ -34,7 +34,8 @@ var error = OK
 var _errors: int
 var _last_error: int
 
-# ----- private class members
+var _print_logs: bool
+
 var _current_node: CompiledYarnNode
 var _is_raw_text: bool
 var _program: YarnProgram
@@ -58,9 +59,11 @@ func compile_string(
 	source_code: String,
 	source_code_path: String,
 	show_tokens: bool = false,
-	print_tree: bool = false
+	print_tree: bool = false,
+	print_logs: bool = false
 ) -> Error:
 	_source_code_path = source_code_path
+	_print_logs = print_logs
 
 	# parse header
 	var header_separator: RegEx = RegEx.new()
@@ -93,7 +96,6 @@ func compile_string(
 		var title_found: bool = false
 		while line_number < source_lines.size():
 			var current_line: String = source_lines[line_number]
-			# print(sourceLines[line_number])
 			line_number += 1
 
 			if !current_line.is_empty():
@@ -106,12 +108,12 @@ func compile_string(
 						# title property found!
 						dialogue_title = value
 						title_found = true
-						#print("Title found in line %d: %s" % [line_number, dialogue_title])
+						if print_logs: print("Compiler: title found in line %d: %s" % [line_number, dialogue_title])
 						# no not break here; read the rest of the header to correctly update line_number
 
 			if line_number >= source_lines.size() || source_lines[line_number] == "---":
 				headers_parsed = true
-				#print("End of headers found in line %d" % [line_number])
+				if print_logs: print("Compiler: end of headers found in line %d" % [line_number])
 				break
 
 		if not headers_parsed:
@@ -149,7 +151,7 @@ func compile_string(
 		#return ERR_UNAVAILABLE
 
 		# run parser on the tokens to convert them into YarnParser.YarnDialogueNode objects
-		var parser = Parser.new(tokens)
+		var parser = Parser.new(tokens, print_logs)
 		var root_node: YarnParser.YarnDialogueNode = parser.parse_node(dialogue_title, body_start_line) # automatically creates tree of yarn nodes using the tokens
 		if parser.error != OK:
 			printerr("Failed to parse dialogue node [%s] in file: %s." % [dialogue_title, source_code_path])
@@ -178,11 +180,11 @@ func compile_string(
 				node.get_location_string()
 			])
 			return error
-		#else:
-			#print("Compiled dialogue %s. Final number of instructions: %d" % [
-				#node.dialogue_section_name,
-				#(_program.yarn_nodes[node.dialogue_section_name] as CompiledYarnNode).instructions.size()
-			#])
+		elif print_logs:
+			print("Compiler: compiled dialogue %s. Final number of instructions: %d" % [
+				node.dialogue_section_name,
+				(_program.yarn_nodes[node.dialogue_section_name] as CompiledYarnNode).instructions.size()
+			])
 
 	copy_registered_strings(_program.yarn_strings, _registered_string_table)
 	
@@ -200,10 +202,10 @@ static func copy_registered_strings(target: Dictionary, patch: Dictionary):
 ## all statements within and options (other linked dialogues).
 ## This will first be called on each dialogue root node.
 func compile_node(parsed_node: YarnParser.YarnDialogueNode) -> void:
-	#print("Compiler.compile_node: compiling dialogue node %s (%d statements)" % [
-		#parsed_node.dialogue_section_name,
-		#parsed_node.statements.size()
-	#])
+	if _print_logs: print("Compiler: compiling dialogue node %s (%d statements)" % [
+		parsed_node.dialogue_section_name,
+		parsed_node.statements.size()
+	])
 
 	if _program.yarn_nodes.has(parsed_node.dialogue_section_name):
 		# emit_error(DUPLICATE_NODES_IN_PROGRAM)

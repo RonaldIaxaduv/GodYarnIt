@@ -10,8 +10,9 @@ size_flags_horizontal = 3
 size_flags_vertical = 0
 script = ExtResource("1_fdpe7")
 CompileButton = NodePath("VBoxContainer/CompilationContainer/CompileButton")
-ShowTokensCheckBox = NodePath("VBoxContainer/CompilationContainer/ShowTokens/ShowTokensCheckBox")
-PrintTreeCheckBox = NodePath("VBoxContainer/CompilationContainer/PrintTree/PrintTreeCheckBox")
+ShowTokensCheckBox = NodePath("VBoxContainer/CompilationContainer/ShowTokensCheckBox")
+PrintTreeCheckBox = NodePath("VBoxContainer/CompilationContainer/PrintTreeCheckBox")
+PrintLogsCheckBox = NodePath("VBoxContainer/CompilationContainer/PrintLogsCheckBox")
 OpenDialog = NodePath("VBoxContainer/OpenDialog")
 Dialog = NodePath("VBoxContainer/PopupDialog")
 TestButton = NodePath("VBoxContainer/PopupDialog/TestButton")
@@ -19,7 +20,7 @@ TestButton = NodePath("VBoxContainer/PopupDialog/TestButton")
 [node name="VBoxContainer" type="VBoxContainer" parent="."]
 layout_mode = 2
 
-[node name="CompilationContainer" type="HBoxContainer" parent="VBoxContainer"]
+[node name="CompilationContainer" type="VBoxContainer" parent="VBoxContainer"]
 layout_mode = 2
 
 [node name="CompileButton" type="Button" parent="VBoxContainer/CompilationContainer"]
@@ -29,31 +30,19 @@ size_flags_vertical = 3
 focus_mode = 0
 text = "COMPILE!"
 
-[node name="ShowTokens" type="VBoxContainer" parent="VBoxContainer/CompilationContainer"]
-layout_mode = 2
-size_flags_vertical = 0
-
-[node name="Label" type="Label" parent="VBoxContainer/CompilationContainer/ShowTokens"]
-layout_mode = 2
-size_flags_vertical = 0
-text = "tokens"
-
-[node name="ShowTokensCheckBox" type="CheckBox" parent="VBoxContainer/CompilationContainer/ShowTokens"]
+[node name="ShowTokensCheckBox" type="CheckBox" parent="VBoxContainer/CompilationContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
+text = "Print Tokens"
 
-[node name="PrintTree" type="VBoxContainer" parent="VBoxContainer/CompilationContainer"]
-layout_mode = 2
-size_flags_vertical = 0
-
-[node name="Label" type="Label" parent="VBoxContainer/CompilationContainer/PrintTree"]
-layout_mode = 2
-size_flags_vertical = 0
-text = "tree"
-
-[node name="PrintTreeCheckBox" type="CheckBox" parent="VBoxContainer/CompilationContainer/PrintTree"]
+[node name="PrintTreeCheckBox" type="CheckBox" parent="VBoxContainer/CompilationContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
+text = "Print Tree"
+
+[node name="PrintLogsCheckBox" type="CheckBox" parent="VBoxContainer/CompilationContainer"]
+layout_mode = 2
+text = "Print Logs"
 
 [node name="OpenDialog" type="Button" parent="VBoxContainer"]
 visible = false
@@ -61,7 +50,6 @@ layout_mode = 2
 text = "openDialog"
 
 [node name="PopupDialog" type="PopupPanel" parent="VBoxContainer"]
-visible = true
 
 [node name="TestButton" type="Button" parent="VBoxContainer/PopupDialog"]
 offset_left = 4.0

@@ -6,11 +6,12 @@
 @tool
 extends VBoxContainer
 
-signal compile_clicked(show_tokens: bool, print_syntax: bool)
+signal compile_clicked(show_tokens: bool, print_syntax: bool, print_logs: bool)
 
 @export var CompileButton : NodePath ## Pressing this button will start the compilation of the yarn program.
 @export var ShowTokensCheckBox : NodePath ## If this CheckBox is ticked, the tokens created by the Lexer will be printed during compilation.
 @export var PrintTreeCheckBox : NodePath ## If this CheckBox is ticked, the node tree of the Parser will be printed during compilation.
+@export var PrintLogsCheckBox : NodePath ## If this CheckBox is ticked, the Parser and other classes will print more details during their execution.
 @export var OpenDialog : NodePath ## TODO FIXME: what was this supposed to do?
 @export var Dialog : NodePath ## TODO FIXME: what was this supposed to do?
 @export var TestButton : NodePath ## TODO FIXME: what was this supposed to do?
@@ -24,7 +25,11 @@ func _ready():
 
 
 func _on_compile_pressed():
-	compile_clicked.emit((get_node(ShowTokensCheckBox) as CheckBox).button_pressed, (get_node(PrintTreeCheckBox) as CheckBox).button_pressed)
+	compile_clicked.emit(
+		(get_node(ShowTokensCheckBox) as CheckBox).button_pressed,
+		(get_node(PrintTreeCheckBox) as CheckBox).button_pressed,
+		(get_node(PrintLogsCheckBox) as CheckBox).button_pressed
+	)
 
 
 func _on_open_dialog_pressed():

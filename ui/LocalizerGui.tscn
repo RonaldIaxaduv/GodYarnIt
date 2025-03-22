@@ -4,6 +4,7 @@
 
 [node name="LocalizerGui" type="AcceptDialog"]
 title = "GodYarnIt Localiser GUI"
+position = Vector2i(0, 36)
 size = Vector2i(254, 161)
 visible = true
 script = ExtResource("1_32bg8")

@@ -5,6 +5,7 @@ tags:
 Please select which feature you would like to test.  #line:85634fce // note: Options need to work for this!
 [[wait | Wait_Test]] #line:c07bf561
 [[Custom Functions | Custom_Functions_Test]] #line:7ad573ad
+[[Custom Commands | Custom_Commands_Test]] #line:e3d9d2d3 
 
 ===
 
@@ -44,7 +45,7 @@ Standard library: And({$test_bool1}, {$test_bool2}) = {And($test_bool1, $test_bo
 Standard library: Xor({$test_bool1}, {$test_bool2}) = {Xor($test_bool1, $test_bool2)} #line:9ce9d510
 Randomisation library: GetRandomFloat() = {GetRandomFloat()} #line:fa48f004
 Randomisation library: GetRandomIntInRange({$test_number1}, {$test_number2}) = {GetRandomIntInRange($test_number1, $test_number2)} #line:6d686dd2
-Randomisation library: GetRandomIntOptionalArgs(2, {$test_number2}) = {GetRandomIntOptionalArgs(2, $test_number2)} #line:8222ba5e 
+Randomisation library: GetRandomIntOptionalArgs(2, {$test_number2}) = {GetRandomIntOptionalArgs(2, $test_number2)} #line:8222ba5e
 Randomisation library: PrintRandomInt(){PrintRandomInt()} #line:13e2ce03
 Setting two more test values using functions: <<set $test_bool3 = Xor($test_bool1, $test_bool2)>> <<set $test_float = GetRandomFloat()>> #line:96888765
 Results: test_bool3 = {$test_bool3}, test_float = {$test_float}. #line:a05e042d
@@ -54,5 +55,26 @@ Here are even more auto-formatted {Apple(2, false)}. #line:70a29f44
 And here's an {Apple_NoArgs()} formatted without args. #line:24b03fd1
 Custom functions test done! #line:a62f3b36
 [[Start]] #line:157f4660
+
+===
+
+
+
+
+title: Custom_Commands_Test
+tags:
+---
+
+<<set $test_number1 = 6>>
+<<set $test_number2 = 10>>
+Let's test whether custom commands work. #line:34ba37f6 
+Next, a random int will be printed. (Command without args) #line:e3dc3fd0 
+<<PrintRandomInt()>>
+Now, a random int between 0 and 10 will be printed. (Command with static args) #line:f5546f78 
+<<PrintRandomIntInRange(0, 10)>>
+Finally, let's print a random int between {$test_number1} and {$test_number2}. (Command with variable args) #line:fe20fec5 
+<<PrintRandomIntInRange($test_number1, $test_number2)>>
+Custom commands test done! #line:645c5d79 
+[[Start]] #line:64007cf7 
 
 ===

@@ -6,14 +6,17 @@ class_name YarnParser # gave this a class name for better typing in the subclass
 # const YarnGlobals = preload("res://addons/godyarnit/autoloads/execution_states.gd")
 const Lexer = preload("res://addons/godyarnit/core/compiler/lexer.gd")
 
+
 var error = OK
 var current_node_name: String = "Start"
+var enable_logs: bool
 
 var _tokens: Array[Lexer.Token] = []
 
 
-func _init(tokens: Array[Lexer.Token]):
+func _init(tokens: Array[Lexer.Token], enable_logs: bool):
 	self._tokens = tokens
+	self.enable_logs = enable_logs
 
 
 ## Create a tree of yarn nodes using the currently available
@@ -238,7 +241,7 @@ class DialogueSectionNode:
 			
 			# create next statement
 			statements.append(Statement.new(self, parser))
-			#print("DialogueSectionNode._init: %s statement count: %d" % [dialogue_section_name, statements.size()])
+			if parser.enable_logs: print("DialogueSectionNode: %s statement count: %d" % [dialogue_section_name, statements.size()])
 		
 		if parser.error != OK:
 			printerr("DialogueSectionNode._init: detected error in dialogue %s %s -> aborted." % [
@@ -284,31 +287,31 @@ class Statement:
 			return
 
 		if Block.can_parse(parser):
-			print("parsing a new block")
+			if parser.enable_logs: print("Statement: parsing a new block")
 			block = Block.new(self, parser)
 			statement_type = Type.Block
 		elif IfStatement.can_parse(parser):
-			print("parsing if statement")
+			if parser.enable_logs: print("Statement: parsing if statement")
 			if_statement = IfStatement.new(self, parser)
 			statement_type = Type.IfStatement
 		elif OptionStatement.can_parse(parser):
-			print("parsing an option statement")
+			if parser.enable_logs: print("Statement: parsing an option statement")
 			option_statement = OptionStatement.new(self, parser)
 			statement_type = Type.OptionStatement
 		elif Assignment.can_parse(parser):
-			print("parsing an assignment statement")
+			if parser.enable_logs: print("Statement: parsing an assignment statement")
 			assignment = Assignment.new(self, parser)
 			statement_type = Type.AssignmentStatement
 		elif ShortcutOptionGroup.can_parse(parser):
-			print("parsing a shortcut option group")
+			if parser.enable_logs: print("Statement: parsing a shortcut option group")
 			shortcut_option_group = ShortcutOptionGroup.new(self, parser)
 			statement_type = Type.ShortcutOptionGroup
 		elif CustomCommand.can_parse(parser):
-			print("parsing a custom command")
+			if parser.enable_logs: print("Statement: parsing a custom command")
 			custom_command = CustomCommand.new(self, parser)
 			statement_type = Type.CustomCommand
 		elif LineNode.can_parse(parser):
-			print("parsing text")
+			if parser.enable_logs: print("Statement: parsing text")
 			# line = parser.try_pop_token_type([YarnGlobals.TokenType.Text]).value
 			# statement_type = Type.Line
 			line = LineNode.new(self, parser)
@@ -355,7 +358,7 @@ class Statement:
 				printerr("unable to create string of statement %s" % [get_location_string()])
 				return ""
 
-		#print("statement --")
+		#if parser.enable_logs: print("statement --")
 
 		return String("").join(info)
 
@@ -647,7 +650,7 @@ class ShortcutOptionGroup:
 		assert(option_index > 1) # If this causes a break, it means that there was a shortcut option group without any options. This could be because of a mistake in the yarn file or in the parser.
 		
 		var name_of_top_of_stack = YarnGlobals.get_script().get_token_type_name(parser._tokens.front().token_type)
-		print("ended the shortcut group with a [%s] token on top" % name_of_top_of_stack)
+		if parser.enable_logs: print("ShortcutOptionGroup: ended the shortcut group with a [%s] token on top" % name_of_top_of_stack)
 
 	## Returns a string representing this shortcut option group (multiline, using tabs).
 	func get_tree_string(indent_level: int) -> String:
@@ -688,12 +691,12 @@ class ShortcutOption:
 			printerr("ShortcutOption._init: detected error %s -> aborted." % [get_location_string()])
 			return
 		
-		print("starting shortcut option parse")
+		if parser.enable_logs: print("ShortcutOption: starting shortcut option parse")
 		parser.try_pop_token_type([YarnGlobals.TokenType.ShortcutOption])
 		
 		# option contains a line of code
 		option_line = LineNode.new(self, parser)
-		print(" this is a line found in shortcutoption : ", option_line.line_text)
+		if parser.enable_logs: print("\tthis is a line found in shortcutoption : ", option_line.line_text)
 		
 		# parse the conditional << if $x >> when it exists
 		# there may be a tag on the same line
@@ -716,7 +719,7 @@ class ShortcutOption:
 				var tag: String = parser.try_pop_token_type([YarnGlobals.TokenType.Identifier]).value
 				tags.append(tag)
 			else:
-				print("no if or tag on the remainder of this line.")
+				if parser.enable_logs: print("\tno if or tag on the remainder of this line.")
 				break
 		
 		if parser.error != OK:
@@ -839,7 +842,7 @@ class LineNode:
 			printerr("LineNode._init: an error occurred while parsing the line %s -> aborted." % [get_location_string()])
 			return
 		
-		print("new line found: ", line_text)
+		if parser.enable_logs: print("LineNode: new line found: ", line_text)
 	
 	static func can_parse(parser: YarnParser) -> bool:
 		return parser.next_token_is([
@@ -1040,13 +1043,14 @@ class CustomCommand:
 		
 		parser.try_pop_token_type([YarnGlobals.TokenType.BeginCommand])
 		
-		# store the tokens inside the command in a separate array
-		var command_tokens: Array = [] # Array[Lexer.Token]
+		# copy the tokens inside the command in a separate array
+		# before evaluating further
+		var command_tokens: Array[Lexer.Token] = []
 		while (
 			not parser.next_token_is([YarnGlobals.TokenType.EndCommand])
 			and parser.error == OK
 		):
-			command_tokens.append(parser.pop_token()) # note: should start with text or an identifier
+			command_tokens.append(parser.pop_token())
 		
 		if parser.error != OK:
 			printerr("CustomCommand._init: an error occurred while parsing command tokens %s -> aborted." % [get_location_string()])
@@ -1054,21 +1058,23 @@ class CustomCommand:
 		
 		parser.try_pop_token_type([YarnGlobals.TokenType.EndCommand])
 		
+		if command_tokens.size() == 0:
+			return
+		
 		# evaluate the command tokens
 		if (
-			command_tokens.size() > 1
-			&& command_tokens[0].token_type == YarnGlobals.TokenType.Identifier
-			&& command_tokens[1].token_type == YarnGlobals.TokenType.LeftParen
+			command_tokens[0].token_type == YarnGlobals.TokenType.Identifier
+			and command_tokens[1].token_type == YarnGlobals.TokenType.LeftParen
 		):
 			# first token is an identifier and second is left parenthesis
 			# -> evaluate as function
 			#  -> create parser for the command
-			var p: YarnParser = get_script().new(command_tokens, parser.library) ## TODO FIXME: parser.library isn't defined anywhere, is it? this might be deprecated code.
+			var p: YarnParser = YarnParser.new(command_tokens, parser.enable_logs)
 			var expression: ExpressionNode = ExpressionNode.parse(self, p)
 			command_type = Type.Expression
 			self.expression = expression
 		else:
-			# text -> other command -> evaluate
+			# text -> build-in command -> evaluate
 			command_type = Type.ClientCommand
 			self.client_command = command_tokens[0].value
 
@@ -1198,7 +1204,7 @@ class ExpressionNode:
 			YarnGlobals.ExpressionType.FunctionCall:
 				info.append(apply_tab(indent_level, "Func[%s - params(%s)]:{" % [function_name, function_params.size()]))
 				for param in function_params:
-					#print("----> %s paramSize:%s"%[(function) , params.size()])
+					#if parser.enable_logs: print("----> %s paramSize:%s"%[(function) , params.size()])
 					info.append(param.get_tree_string(indent_level + 1))
 				info.append(apply_tab(indent_level, "}"))
 

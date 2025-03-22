@@ -45,7 +45,7 @@ func set_program_name(value: String) -> void:
 
 ## Compiles all the program files into a singular program.
 ## Also ensures that all lines in the programs are tagged.
-func _compile_programs(show_tokens: bool, print_syntax: bool) -> YarnProgram:
+func _compile_programs(show_tokens: bool, print_syntax: bool, print_logs: bool) -> YarnProgram:
 	var programs: Array[YarnProgram] = []
 	var yarn_source_codes: Dictionary = {} # [String, String] -> (yarn program file path, yarn program file as text)
 
@@ -82,28 +82,28 @@ func _compile_programs(show_tokens: bool, print_syntax: bool) -> YarnProgram:
 		if source_code.is_empty():
 			continue
 
-		var yarn_program: YarnProgram = _compile_program(source_code, source_code_path, show_tokens, print_syntax)
+		var yarn_program: YarnProgram = _compile_program(source_code, source_code_path, show_tokens, print_syntax, print_logs)
 		if yarn_program == null:
 			printerr("CompiledYarnProgram: failed to compile yarn program [%s]." % source_code_path)
 			return null
 		else:
 			programs.append(yarn_program)
-			#print("Compiled yarn program [%s] successfully. %d nodes, %d strings." % [
-				#source_code_path,
-				#yarn_program.yarn_nodes.size(),
-				#yarn_program.yarn_strings.size()
-			#])
+			if print_logs: print("Compiled yarn program [%s] successfully. %d nodes, %d strings." % [
+				source_code_path,
+				yarn_program.yarn_nodes.size(),
+				yarn_program.yarn_strings.size()
+			])
 	
 	# combine all the programs into a single one
 	var programs_copy: Array[YarnProgram] = []
 	programs_copy.append_array(programs)
 	var combined_yarn_program: YarnProgram = ProgramUtils.combine_programs(programs_copy)
 	
-	#print("Combined yarn program: %s (%d nodes, %d strings)" % [
-		#combined_yarn_program.program_name,
-		#combined_yarn_program.yarn_nodes.size(),
-		#combined_yarn_program.yarn_strings.size()
-	#])
+	if print_logs: print("Combined yarn program: %s (%d nodes, %d strings)" % [
+		combined_yarn_program.program_name,
+		combined_yarn_program.yarn_nodes.size(),
+		combined_yarn_program.yarn_strings.size()
+	])
 	
 	return combined_yarn_program
 
@@ -114,10 +114,10 @@ func _compile_programs(show_tokens: bool, print_syntax: bool) -> YarnProgram:
 ## the result.
 ## Returns whether there were any errors.
 func _compile_program(
-	source_code: String, source_code_path: String, show_tokens: bool, print_syntax: bool
+	source_code: String, source_code_path: String, show_tokens: bool, print_syntax: bool, print_logs: bool
 ) -> YarnProgram:
 	var compiler = YarnCompiler.new()
-	var e: Error = compiler.compile_string(source_code, source_code_path, show_tokens, print_syntax)
+	var e: Error = compiler.compile_string(source_code, source_code_path, show_tokens, print_syntax, print_logs)
 	if e != OK:
 		return null
 	else:
@@ -142,12 +142,15 @@ func _load_compiled_program() -> YarnProgram:
 ## by the [member _compiled_program_name], [member _compiled_program_directory]
 ## and [const EXTENSION] members.
 func _save_compiled_program(program: YarnProgram) -> void:
+	var filepath = get_full_file_path()
+	ProgramUtils.export_program(YarnProgram.new() if program == null else program, filepath)
+
+func get_full_file_path() -> String:
 	var effective_directory: String = _compiled_program_directory
 	if not effective_directory == "res://" and not effective_directory.ends_with("/"):
 		effective_directory += "/"
 	
-	var filepath = "%s%s.%s" % [effective_directory, _compiled_program_name, EXTENSION]
-	ProgramUtils.export_program(YarnProgram.new() if program == null else program, filepath)
+	return "%s%s.%s" % [effective_directory, _compiled_program_name, EXTENSION]
 
 # func set_files(arr):
 # 	if !Engine.editor_hint:

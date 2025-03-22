@@ -42,14 +42,15 @@ Hence, I decided to go the long way and **gave the code a big face-lift and exte
 -   [X] Format Functions `[func {$value} args...]` (select, plural, ordinal)
 -   [X] Pluralisation
 -   [ ] Persistent Variable Storage (currently can only be done manually)
--   [ ] Custom Commands (implemented already, but cumbersome to use)
--   [X] Function Library Extensions
+-   [x] Custom Commands `<<CustomCommand(0, $value)>>`
+-   [X] Function Library Extensions `{CustomFunction(1, $value)}`
 -   [X] Option Links `[[OptionalText | TargetNode]]` (deprecated for Yarn 2.0, might get removed)
 -   [X] Shortcut Options `->`
 -   [ ] Localisation (WIP)
 -   [X] if/elseif/else Statements `<<if ...>>`
 -   [X] set command `<<set $var = 5>>`
 -   [X] wait command `<<wait 4>>`
+	- [ ] wait command with variable time `<<wait $time>>`
 -   [X] support for BBCode `[b]bold[/b]` (**must use RichTextLabel**)
 -   [ ] Header info processing
 -   [ ] Yarn 2.0+ functionalities like jumps `<<jump TargetNode>>` or variable declarations `<<declare $value = true as bool>>`
@@ -220,17 +221,22 @@ GodYarnIt, like GDYarn, comes with a default GUI implementation which will be ex
 
 ### Function Library Storage
 
-The **Function Library Storage** node is allows you to add functions with custom names that can be called from within your Yarn script files.
+The **Function Library Storage** node is allows you to add functions and commands with custom names that can be called from within your Yarn script files.
 
 It contains an array of GDScript resources. These need to be subclasses of the library class (`//core/libraries/library.gd`). Feel free to use the Standard library (`//core/libraries/standard.gd`) or the code section below as a reference.
 
-In order for the functions to be loaded, the Yarn Runner needs to hold a reference to a Function Library Storage - as for the Variable Storage, there is an export variable for this. The Yarn Runner will automatically import all libraries contained in the referenced Function Library Storage node.
+In order for the functions and commands to be loaded, the Yarn Runner needs to hold a reference to a Function Library Storage - as for the Variable Storage, there is an export variable for this. The Yarn Runner will automatically import all libraries contained in the referenced Function Library Storage node.
 
-The following kinds of functions are supported:
+The following kinds of custom functions are supported:
 - functions without arguments: `{Foo1()}`
-- functions with a set number of arguments `{Foo2($arg1, 2)}`
+- functions with a static number of arguments `{Foo2($arg1, 2)}`
 - functions with a variable number of arguments: `{Foo3()}`, `{Foo3($arg1, $arg2)}`
 - functions without a return value: `{Foo4()}` (these will turn into empty strings)
+
+And the following kinds of custom commands are supported:
+- commands without arguments: `<<Foo4()>>`
+- commands with a static/variable number of arguments: `<<Foo5(1, $arg3)>>`
+Custom commands should not have any return value.
 
 In the code, they would look like this:
 ```GDScript
@@ -243,6 +249,7 @@ func _init():
 	register_function("Foo2", 2, Callable(self, "get_random_int_in_range"), true)
 	register_function("Foo3", 2, Callable(self, "get_random_int_optional_args"), true)
 	register_function("Foo4", 0, Callable(self, "print_random_int"), false)
+	register_function("Foo5", 2, Callable(self, "print_random_int_in_range"), false)
 
 
 ## Returns a random number between 0.0 and 1.0 (inclusive)
@@ -262,4 +269,8 @@ func get_random_int_optional_args(min = 0, max = 10) -> int:
 ## Prints a random int without returning anything
 func print_random_int() -> void:
 	print("Here's a random int: %d" % [randi()])
+
+## Prints a random int in a range without returning anything
+func print_random_int_in_range(min: Value, max: Value) -> void:
+	print("PRINTING A RANDOM INT BETWEEN %d AND %d: %d" % [min.as_number(), max.as_number(), randi_range(min.as_number(), max.as_number())])
 ```

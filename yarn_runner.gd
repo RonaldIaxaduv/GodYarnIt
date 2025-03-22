@@ -80,7 +80,7 @@ func _ready():
 		
 		if program == null:
 			# compiled program doesn't exist yet -> compile it now
-			program = _compile_programs(true, true)
+			program = _compile_programs(true, true, true)
 		
 		if program:
 			_string_table = program.yarn_strings
@@ -163,15 +163,15 @@ func stop():
 
 ## Compiles the yarn programs stored in [member _compiled_yarn_program],
 ## saves them to the disk and returns the compiled program.
-func _compile_programs(show_tokens: bool, print_tree: bool) -> YarnProgram:
+func _compile_programs(show_tokens: bool, print_tree: bool, print_logs: bool) -> YarnProgram:
 	if _compiled_yarn_program == null:
 		printerr("Unable to compile programs. Missing CompiledYarnProgram resource in YarnRunner.")
 		return null
-	var program: YarnProgram = _compiled_yarn_program._compile_programs(show_tokens, print_tree)
+	var program: YarnProgram = _compiled_yarn_program._compile_programs(show_tokens, print_tree, print_logs)
 	
 	if program != null:
 		_compiled_yarn_program._save_compiled_program(program)
-		print("The Yarn program has been saved.")
+		print_rich("[color=green][b]Your Yarn program has been compiled and saved: %s[/b][/color]" % [_compiled_yarn_program.get_full_file_path()])
 	
 	return program
 
