@@ -50,7 +50,7 @@ Hence, I decided to go the long way and **gave the code a big face-lift and exte
 -   [X] if/elseif/else Statements `<<if ...>>`
 -   [X] set command `<<set $var = 5>>`
 -   [X] wait command `<<wait 4>>`
-	- [ ] wait command with variable time `<<wait $time>>`
+-   [X] built-in commands using expression args `<<wait $time>>`
 -   [X] support for BBCode `[b]bold[/b]` (**must use RichTextLabel**)
 -   [ ] Header info processing
 -   [ ] Yarn 2.0+ functionalities like jumps `<<jump TargetNode>>` or variable declarations `<<declare $value = true as bool>>`
