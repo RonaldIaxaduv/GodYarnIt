@@ -154,7 +154,7 @@ enum ExpressionType { Value, FunctionCall }
 ## Yarn Parser and Yarn Compiler.
 ## Examples: CustomCommand, ShortcutOptionGroup, IfStatement, Block, Line,...
 enum StatementTypes {
-	CustomCommand,
+	Command,
 	ShortcutOptionGroup,
 	Block,
 	IfStatement,

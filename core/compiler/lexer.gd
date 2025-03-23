@@ -143,8 +143,12 @@ func create_states() -> void:
 	_states[COMMAND].add_text_rule(YarnGlobals.TokenType.Text)
 
 	_states[command_or_expression] = LexerState.new(patterns)
-	_states[command_or_expression].add_transition(YarnGlobals.TokenType.LeftParen, EXPRESSION)
+	_states[command_or_expression].add_transition(YarnGlobals.TokenType.LeftParen, EXPRESSION) # custom command
 	_states[command_or_expression].add_transition(YarnGlobals.TokenType.EndCommand, BASE, true)
+	_states[command_or_expression].add_transition(YarnGlobals.TokenType.Number, command_or_expression) # arg for built-in command
+	_states[command_or_expression].add_transition(YarnGlobals.TokenType.Variable, command_or_expression) # arg for built-in command
+	_states[command_or_expression].add_transition(YarnGlobals.TokenType.Identifier, command_or_expression) # arg for built-in command
+	_states[command_or_expression].add_transition(YarnGlobals.TokenType.Comma, command_or_expression) # arg for built-in command
 	_states[command_or_expression].add_text_rule(YarnGlobals.TokenType.Text)
 
 	_states[ASSIGNMENT] = LexerState.new(patterns)

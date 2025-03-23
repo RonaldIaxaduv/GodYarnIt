@@ -190,6 +190,11 @@ func find_label_instruction_index(label: String) -> int:
 		return -1
 	return _current_node.labels[label]
 
+func peek_next_instruction_type() -> YarnGlobals.ByteCode:
+	if not _current_node.instructions.has(_state.program_instruction_index + 1):
+		return -1
+	return (_current_node.instructions[_state.program_instruction_index + 1] as Instruction).operation
+
 
 ## Executes the given instruction object (instruction.gd).
 ## TODO: add format function support
@@ -235,41 +240,51 @@ func run_instruction(instruction: Instruction) -> bool:
 				execution_state = YarnGlobals.ExecutionState.Suspended
 
 		YarnGlobals.ByteCode.RunCommand: # handles built-in commands like wait
-			var command_and_args: String = instruction.operands[0].value
+			var command_name: String = instruction.operands[0].value
 
 			# TODO: allow for inline expressions and format functions in commands
 			if instruction.operands.size() > 1:
 				pass  #add format function
 
-			var command: Command = Command.new(command_and_args)
-			if command.command == "wait":
-				if command.args.size() >= 1:
-					var time: float = float(command.args[0])
-					if time > 0:
-						is_waiting = true
-						
-#						var pause = command_handler.call(command)
-#						if (
-#							pause is GDScriptFunctionState
-#							|| pause == YarnGlobals.HandlerState.PauseExecution
-#						):
-#							execution_state = YarnGlobals.ExecutionState.Suspended
-						
-						# since GDScriptFunctionState isn't a thing anymore in 4.0 and there is no exception handling, things will be a little messy here...
-						var prev_execution_state: int = execution_state
-						execution_state = YarnGlobals.ExecutionState.Suspended # always assume suspension
-						var resulting_state: int = await command_handler.call(command) # calls runner's _handle_command. await is obligatory, otherwise this line causes a break
-						if resulting_state != YarnGlobals.HandlerState.PauseExecution: # TODO FIXME: DEADLOCK! for the previous call to end, runner.resume is called, which calls dialogue.resume, which calls vm.resume - but the vm is still waiting here!
-							execution_state = prev_execution_state # return to prior execution state (if call was synchronous, this should be executed seemlessly hopefully...)
-						
-						if execution_state == YarnGlobals.ExecutionState.Suspended:
-							await self.resumed
-						
-						is_waiting = false
-					#else
-					#	trying to wait for 0 seconds -> no waiting at all
+			var command: Command = Command.new(command_name)
+			var expected_arg_count: int
+			var actual_arg_count: int = _state.pop_value().as_number()
+			if command.command_name == "wait":
+				expected_arg_count = 1
+				if actual_arg_count < expected_arg_count:
+					printerr("VirtualMachine.run_instruction: tried to execute a wait command without time argument. Command skipped.")
 				else:
-					printerr("Tried to execute a wait command without time argument. Command skipped.")
+					var args: Array[Value] = [] as Array[Value]
+					for i in range(actual_arg_count):
+						args.push_front(_state.pop_value())
+					command.args = args
+					if (args.back() as Value).type != YarnGlobals.ValueType.Number:
+						printerr("VirtualMachine.run_instruction: wait command wasn't followed by an expression evaluating to a number. Command skipped.")
+					else:
+						var time: float = (args.back() as Value).as_number() #float(command.args[0])
+						if time > 0.0:
+							is_waiting = true
+							
+	#						var pause = command_handler.call(command)
+	#						if (
+	#							pause is GDScriptFunctionState
+	#							|| pause == YarnGlobals.HandlerState.PauseExecution
+	#						):
+	#							execution_state = YarnGlobals.ExecutionState.Suspended
+							
+							# since GDScriptFunctionState isn't a thing anymore in 4.0 and there is no exception handling, things will be a little messy here...
+							var prev_execution_state: int = execution_state
+							execution_state = YarnGlobals.ExecutionState.Suspended # always assume suspension
+							var resulting_state: int = await command_handler.call(command) # calls runner's _handle_command. await is obligatory, otherwise this line causes a break
+							if resulting_state != YarnGlobals.HandlerState.PauseExecution: # TODO FIXME: DEADLOCK! for the previous call to end, runner.resume is called, which calls dialogue.resume, which calls vm.resume - but the vm is still waiting here!
+								execution_state = prev_execution_state # return to prior execution state (if call was synchronous, this should be executed seemlessly hopefully...)
+							
+							if execution_state == YarnGlobals.ExecutionState.Suspended:
+								await self.resumed
+							
+							is_waiting = false
+						#else
+						#	trying to wait for 0 seconds -> no waiting at all
 			else:
 				# other command
 				
@@ -318,12 +333,9 @@ func run_instruction(instruction: Instruction) -> bool:
 			var actual_param_count: int = _state.pop_value().as_number()
 
 			if not function.check_param_count_valid(actual_param_count):
-				printerr(
-					(
-						"Function %s expected %d parameters but got %d instead"
-						% [function_name, expected_param_count, actual_param_count]
-					)
-				)
+				printerr("VirtualMachine.run_instruction: function %s expected %d parameters but got %d instead" % [
+					function_name, expected_param_count, actual_param_count
+				])
 				return false
 
 			var result
@@ -416,7 +428,7 @@ func run_instruction(instruction: Instruction) -> bool:
 			# unknown instruction bytecode -> stop
 			execution_state = YarnGlobals.ExecutionState.Stopped
 			reset_state()
-			printerr("Unknown instruction bytecode: %s " % instruction.operation)
+			printerr("VirtualMachine.run_instruction: unknown instruction bytecode: %s " % instruction.operation)
 			return false
 
 	return true

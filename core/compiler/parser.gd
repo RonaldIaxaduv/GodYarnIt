@@ -1,5 +1,5 @@
 ## Software component which converts the lexical tokens (produced by the lexer) into a data structure.
-## 
+##
 ## Sets up higher-level Yarn Script objects, e.g. for If blocks, Options etc.
 class_name YarnParser # gave this a class name for better typing in the subclasses of this script
 
@@ -49,10 +49,10 @@ func next_tokens_are(target_types: Array[int], line_number: int = -1) -> bool:
 	assert(target_types.size() > 0) # target token types were unexpectedly empty!
 	assert(_tokens.size() > 0) # if this breaks: Token stack was unexpectedly empty!
 	assert(_tokens.size() >= target_types.size()) # if this breaks: Token stack was smaller than the given target token types!
-	
+
 	var temp_tokens: Array[Lexer.Token] = []
 	temp_tokens.append_array(_tokens)
-	
+
 	for type in target_types:
 		if temp_tokens.pop_front().token_type != type:
 			return false
@@ -64,7 +64,7 @@ func next_tokens_are(target_types: Array[int], line_number: int = -1) -> bool:
 ## If there are no matches, an error is printed and null returned.
 func pop_token(origin_node_name: String = "") -> Lexer.Token:
 	var front_token: Lexer.Token = _tokens.pop_front()
-	
+
 	if front_token.token_type != YarnGlobals.TokenType.EndOfInput:
 		# simply output front token
 		return front_token
@@ -77,15 +77,15 @@ func pop_token(origin_node_name: String = "") -> Lexer.Token:
 func try_pop_token_type(expected_token_types: Array[int] = [], origin_node_name: String = "") -> Lexer.Token:
 	if expected_token_types.size() == 0:
 		return pop_token()
-	
+
 	var front_token: Lexer.Token = self._tokens.pop_front() as Lexer.Token
 
 	for expected_token_type in expected_token_types:
 		if front_token.token_type == expected_token_type:
 			return front_token
-	
+
 	# failed to pop given token type -> print error
-	
+
 	var expected_types: String = ""
 	for i in range(0, expected_token_types.size()):
 		expected_types += YarnGlobals.get_script().get_token_type_name(expected_token_types[i])
@@ -118,7 +118,7 @@ func get_tokens() -> Array[Lexer.Token]:
 
 
 ## A (tree) node containing a line number and tags as well as some useful methods.
-## 
+##
 ## A (tree) node containing a line number and tags as well as some useful methods.
 class ParseNode:
 	var parent: ParseNode
@@ -128,34 +128,34 @@ class ParseNode:
 
 	func _init(parent: ParseNode, parser: YarnParser):
 		self.parent = parent
-		
+
 		var tokens: Array = parser.get_tokens() as Array
 		if tokens.size() > 0:
 			node_line_number = tokens.front().line_number
 		else:
 			node_line_number = -1
-		
+
 		if parent == null:
 			source_code_line_number = node_line_number
 		else:
 			source_code_line_number = parent.source_code_line_number + node_line_number
-		
+
 		tags = []
-	
+
 	## Not implemented.
 	func get_tree_string(indentLevel: int) -> String:
 		printerr("ParseNode: tried to call unimplemented method get_tree_string.")
 		return "NotImplemented"
-	
+
 	## Not implemented.
 	func tags_to_string(indentLevel: int) -> String:
 		printerr("ParseNode: tried to call unimplemented method tags_to_string.")
 		return "%s" % "TAGS<tags_to_string>NOTIMPLEMENTED"
-	
-	
+
+
 	func get_location_string() -> String:
 		return "@[line:%d]" % [source_code_line_number + 1] # source line numbers should begin with 1
-	
+
 	## If this node is a DialogueSectionNode, this returns the node itself.
 	## If this node isn't a DialogueSectionNode, it will return the first parent that is a DialogueSectionNode.
 	## If no parent is a DialogueSectionNode, it returns null.
@@ -166,7 +166,7 @@ class ParseNode:
 				return node as YarnParser.DialogueSectionNode
 			node = node.parent
 		return null
-	
+
 	## Returns the given string with the given indentation depth applied to it.
 	## Optionally appends a line break.
 	func apply_tab(indent_level: int, input: String, append_line_break: bool = true) -> String:
@@ -195,7 +195,7 @@ class Header:
 ## Root node of a Yarn dialogue.
 class YarnDialogueNode:
 	extends DialogueSectionNode
-	
+
 	func _init(dialogue_name: String, source_code_line_number: int, parser: YarnParser) -> void:
 		super(dialogue_name, parent, parser, source_code_line_number)
 
@@ -213,36 +213,36 @@ class DialogueSectionNode:
 	var editor_node_tags: Array[String] = []  ## tags defined in node header
 	var statements: Array[Statement] = []
 	var has_options: bool = false ## true if options ( [[text|dest_node]] ) are contained within this node
-	
+
 	## Initialises the node and its statements.
 	func _init(dialogue_section_name: String, parent: ParseNode, parser: YarnParser, source_code_line_number: int = -1):
 		super(parent, parser) # only copies some info, mainly first line number
-		
+
 		if source_code_line_number > -1:
 			self.source_code_line_number = source_code_line_number
 
 		self.dialogue_section_name = dialogue_section_name
-		
+
 		if parser.error != OK:
 			printerr("DialogueSectionNode._init: detected error in dialogue %s %s -> aborted." % [
 				dialogue_section_name,
 				get_location_string()
 			])
 			return
-		
+
 		while parser.get_tokens().size() > 0 and parser.error == OK:
 			# ignore any whitespace tokens
 			while parser.next_token_is([ YarnGlobals.TokenType.Whitespace ] as Array[int]):
 				parser.pop_token()
-			
+
 			# check if end of input has been reached
 			if parser.next_token_is( [YarnGlobals.TokenType.Dedent, YarnGlobals.TokenType.EndOfInput] ):
 				break
-			
+
 			# create next statement
 			statements.append(Statement.new(self, parser))
 			if parser.enable_logs: print("DialogueSectionNode: %s statement count: %d" % [dialogue_section_name, statements.size()])
-		
+
 		if parser.error != OK:
 			printerr("DialogueSectionNode._init: detected error in dialogue %s %s -> aborted." % [
 				dialogue_section_name,
@@ -267,21 +267,21 @@ class Statement:
 	extends ParseNode
 	var Type = YarnGlobals.StatementTypes
 	var statement_type: int
-	
+
 	# The class will try to instantiate exactly one of the following (or throw an error):
 	var block: Block
 	var if_statement: IfStatement
 	var option_statement: OptionStatement
 	var assignment: Assignment
 	var shortcut_option_group: ShortcutOptionGroup
-	var custom_command: CustomCommand
+	var command: Command
 	var line: LineNode
 
 	## Initialises the statement and its type depending on the upcoming token(s).
 	## Sets statement_type as well as one of the above variables.
 	func _init(parent: ParseNode, parser: YarnParser):
 		super(parent, parser)
-		
+
 		if parser.error != OK:
 			printerr("Statement._init: detected error %s -> aborted." % [get_location_string()])
 			return
@@ -306,10 +306,10 @@ class Statement:
 			if parser.enable_logs: print("Statement: parsing a shortcut option group")
 			shortcut_option_group = ShortcutOptionGroup.new(self, parser)
 			statement_type = Type.ShortcutOptionGroup
-		elif CustomCommand.can_parse(parser):
-			if parser.enable_logs: print("Statement: parsing a custom command")
-			custom_command = CustomCommand.new(self, parser)
-			statement_type = Type.CustomCommand
+		elif Command.can_parse(parser):
+			if parser.enable_logs: print("Statement: parsing a command")
+			command = Command.new(self, parser)
+			statement_type = Type.Command
 		elif LineNode.can_parse(parser):
 			if parser.enable_logs: print("Statement: parsing text")
 			# line = parser.try_pop_token_type([YarnGlobals.TokenType.Text]).value
@@ -350,8 +350,8 @@ class Statement:
 				info.append(option_statement.get_tree_string(indent_level))
 			Type.ShortcutOptionGroup:
 				info.append(shortcut_option_group.get_tree_string(indent_level))
-			Type.CustomCommand:
-				info.append(custom_command.get_tree_string(indent_level))
+			Type.Command:
+				info.append(command.get_tree_string(indent_level))
 			Type.Line:
 				info.append(apply_tab(indent_level, line.get_tree_string(indent_level)))
 			_:
@@ -374,11 +374,11 @@ class Block:
 	## Collects all upcoming statements (from indent until dedent).
 	func _init(parent: ParseNode, parser: YarnParser):
 		super(parent, parser)
-		
+
 		if parser.error != OK:
 			printerr("Block._init: detected error %s -> aborted." % [get_location_string()])
 			return
-		
+
 		# blocks begin with an indent
 		parser.try_pop_token_type([YarnGlobals.TokenType.Indent])
 
@@ -386,11 +386,11 @@ class Block:
 		while not parser.next_token_is([YarnGlobals.TokenType.Dedent]) and parser.error == OK:
 			# parse all statements including nested blocks
 			statements.append(Statement.new(self, parser))
-		
+
 		if parser.error != OK:
 			printerr("Block._init: an error occurred while appending Statements %s -> aborted." % [get_location_string()])
 			return
-		
+
 		# consume dedent
 		parser.try_pop_token_type([YarnGlobals.TokenType.Dedent])
 
@@ -419,49 +419,49 @@ class IfStatement:
 	extends ParseNode
 
 	var clauses: Array[Clause] = []
-	
+
 	## Reads if, elseif and else clause(s) and stores them in the clauses array.
 	func _init(parent: ParseNode, parser: YarnParser):
 		super(parent, parser)
-		
+
 		if parser.error != OK:
 			printerr("IfStatement._init: detected error %s -> aborted." % [get_location_string()])
 			return
-		
+
 		# handle first if clause
 		clauses.append(_read_clause(parser, YarnGlobals.TokenType.IfToken))
-		
+
 		while (
 			parser.next_token_is([YarnGlobals.TokenType.Whitespace])
 			and parser.error == OK
 		):
 			parser.pop_token()
-		
+
 		if parser.error != OK:
 			printerr("IfStatement._init: an error occurred while removing whitespace after if clause %s -> aborted." % [get_location_string()])
 			return
-		
+
 		# handle any elseif clauses
 		while (
 			parser.next_tokens_are([YarnGlobals.TokenType.BeginCommand, YarnGlobals.TokenType.ElseIf])
 			and parser.error == OK
 		):
 			clauses.append(_read_clause(parser, YarnGlobals.TokenType.ElseIf))
-			
+
 			while (
 				parser.next_token_is([YarnGlobals.TokenType.Whitespace])
 				and parser.error == OK
 			):
 				parser.pop_token()
-			
+
 			if parser.error != OK:
 				printerr("IfStatement._init: an error occurred while removing whitespace after elseif clause %s -> aborted." % [get_location_string()])
 				return
-		
+
 		if parser.error != OK:
 			printerr("IfStatement._init: an error occurred while appending Clauses %s -> aborted." % [get_location_string()])
 			return
-		
+
 		# handle else (if one exists)
 		if parser.next_tokens_are(
 			[
@@ -483,11 +483,11 @@ class IfStatement:
 				and parser.error == OK
 			):
 				else_statements.append(Statement.new(self, parser))
-			
+
 			if parser.error != OK:
 				printerr("Statement._init: an error occurred while appending else-Statements %s -> aborted." % [get_location_string()])
 				return
-			
+
 			else_clause.statements = else_statements
 			clauses.append(else_clause)
 
@@ -503,26 +503,26 @@ class IfStatement:
 	func _read_clause(parser: YarnParser, clause_token_type: int) -> Clause:
 		assert(clause_token_type == YarnGlobals.TokenType.IfToken
 			or clause_token_type == YarnGlobals.TokenType.ElseIf)
-		
+
 		# read <<if Expression>> or <<elseif Expression>>
 		parser.try_pop_token_type([YarnGlobals.TokenType.BeginCommand])
 		parser.try_pop_token_type([clause_token_type]) # YarnGlobals.TokenType.If or YarnGlobals.TokenType.ElseIf
-		
+
 		var clause: Clause = Clause.new()
 		clause.expression = ExpressionNode.parse(self, parser)
-		
+
 		parser.try_pop_token_type([YarnGlobals.TokenType.EndCommand])
-		
+
 		while (
 			parser.next_token_is([YarnGlobals.TokenType.Whitespace])
 			and parser.error == OK
 		):
 			parser.pop_token()
-		
+
 		if parser.error != OK:
 			printerr("IfStatement._read_clause: an error occurred while removing whitespace before inner clause %s -> aborted." % [get_location_string()])
 			return
-		
+
 		# read statements until <<elseif Expression>> or <<else>> or <<endif>> is reached
 		var clause_statements: Array[Statement] = []
 		while (
@@ -542,13 +542,13 @@ class IfStatement:
 			# consume any dedents -> ignored
 			while parser.next_token_is([YarnGlobals.TokenType.Dedent, YarnGlobals.TokenType.Whitespace]):
 				parser.pop_token()
-		
+
 		if parser.error != OK:
 			printerr("IfStatement._read_clause: an error occurred while reading clause-Statements %s -> aborted." % [get_location_string()])
 			return null
-		
+
 		clause.statements = clause_statements
-		
+
 		return clause
 
 	## Returns a string representing this if statement (multiline, with indents).
@@ -592,15 +592,15 @@ class Clause:
 	## Returns a string representing this clause (multiline, with indents).
 	func get_tree_string(indent_level: int) -> String:
 		var info: PackedStringArray = []
-		
+
 		if expression != null:
 			info.append(expression.get_tree_string(indent_level))
-			
+
 		info.append(apply_tab(indent_level, "{"))
 		for statement in statements:
 			info.append(statement.get_tree_string(indent_level + 1))
 		info.append(apply_tab(indent_level, "}"))
-		
+
 		return String("").join(info)
 
 	func apply_tab(indent_level: int, input: String, append_line_break: bool = true) -> String:
@@ -621,16 +621,16 @@ class ShortcutOptionGroup:
 	extends ParseNode
 
 	var options: Array[ShortcutOption] = []
-	
+
 	## Consumes a any positive number of ShortcutOption tokens to initialise
 	## ShortcutOption nodes for the options array.
 	func _init(parent: ParseNode, parser: YarnParser):
 		super(parent, parser)
-		
+
 		if parser.error != OK:
 			printerr("ShortcutOptionGroup._init: detected error %s -> aborted." % [get_location_string()])
 			return
-		
+
 		# parse options until there are no more
 		# expects at least one (otherwise invalid)
 		var option_index: int = 1
@@ -642,13 +642,13 @@ class ShortcutOptionGroup:
 		):
 			options.append(ShortcutOption.new(option_index, self, parser))
 			option_index += 1
-		
+
 		if parser.error != OK:
 			printerr("ShortcutOptionGroup._init: an error occurred while appending ShortcutOptions %s -> aborted." % [get_location_string()])
 			return
-		
+
 		assert(option_index > 1) # If this causes a break, it means that there was a shortcut option group without any options. This could be because of a mistake in the yarn file or in the parser.
-		
+
 		var name_of_top_of_stack = YarnGlobals.get_script().get_token_type_name(parser._tokens.front().token_type)
 		if parser.enable_logs: print("ShortcutOptionGroup: ended the shortcut group with a [%s] token on top" % name_of_top_of_stack)
 
@@ -686,18 +686,18 @@ class ShortcutOption:
 	## its (optional) condition and its sub-block.
 	func _init(option_index: int, parent: ParseNode, parser: YarnParser):
 		super(parent, parser)
-		
+
 		if parser.error != OK:
 			printerr("ShortcutOption._init: detected error %s -> aborted." % [get_location_string()])
 			return
-		
+
 		if parser.enable_logs: print("ShortcutOption: starting shortcut option parse")
 		parser.try_pop_token_type([YarnGlobals.TokenType.ShortcutOption])
-		
+
 		# option contains a line of code
 		option_line = LineNode.new(self, parser)
 		if parser.enable_logs: print("\tthis is a line found in shortcutoption : ", option_line.line_text)
-		
+
 		# parse the conditional << if $x >> when it exists
 		# there may be a tag on the same line
 		var tags: Array[String] = []
@@ -721,11 +721,11 @@ class ShortcutOption:
 			else:
 				if parser.enable_logs: print("\tno if or tag on the remainder of this line.")
 				break
-		
+
 		if parser.error != OK:
 			printerr("ShortcutOption._init: an error occurred while parsing shortcut conditional %s -> aborted." % [get_location_string()])
 			return
-		
+
 		self.tags = tags
 
 		# if a line tag was found, apply it to the line node (it doesn't know about it yet!).
@@ -769,28 +769,28 @@ class ShortcutOption:
 class LineNode:
 	extends ParseNode
 	var line_text: String ## the contents of this line formatted as a string
-	
+
 	#TODO: FIXME: right now we are putting the formatfunctions and inline expressions in the same
 	#             list but if at some point we want to strongly type our sub list we need to make a new
 	#             parse node that can have either an InlineExpression or a FormatFunction>
 	#             .. This is a consideration for Godot4.x
 	var substitutions: Array[ParseNode] = []  ## of type <InlineExpression |& FormatFunction>
-	
+
 	var line_id: String = "" ## the ID assigned to this line via a tag.
 	var line_tags: PackedStringArray = [] ## stores all non-line tags (i.e. those not starting with "line:")
 
 	# NOTE: If inline functions and format functions are both present
 	# returns a line in the format "Some text {0} and some other {1}[format "{2}" key="value" key="value"]"
-	
+
 	## Consumes text, format function, expression function and tag tokens to
 	## create respective nodes and store their info.
 	func _init(parent: ParseNode, parser):
 		super(parent, parser)
-		
+
 		if parser.error != OK:
 			printerr("LineNode._init: detected error %s -> aborted." % [get_location_string()])
 			return
-		
+
 		while (
 			parser.next_token_is([
 				YarnGlobals.TokenType.FormatFunctionStart,
@@ -825,7 +825,7 @@ class LineNode:
 						return
 				else:
 					tags.append(tag_token.value)
-				
+
 				break # line tag marks the end of the line!
 
 			else:
@@ -837,13 +837,13 @@ class LineNode:
 					# token is actually a command -> put back on stack!
 					parser._tokens.push_front(tt)
 					break
-		
+
 		if parser.error != OK:
 			printerr("LineNode._init: an error occurred while parsing the line %s -> aborted." % [get_location_string()])
 			return
-		
+
 		if parser.enable_logs: print("LineNode: new line found: ", line_text)
-	
+
 	static func can_parse(parser: YarnParser) -> bool:
 		return parser.next_token_is([
 				YarnGlobals.TokenType.FormatFunctionStart,
@@ -851,7 +851,7 @@ class LineNode:
 				YarnGlobals.TokenType.TagMarker,
 				YarnGlobals.TokenType.Text
 			] as Array[int])
-	
+
 	## Returns a string representing this line node.
 	func get_tree_string(indent_level: int) -> String:
 		return "Line: (%s)[%d]" % [line_text, substitutions.size()]
@@ -871,21 +871,21 @@ class FormatFunction:
 	## and InlineExpression nodes and format text from the tokens within.
 	func _init(parent: ParseNode, parser: YarnParser, expressionCount: int):
 		super(parent, parser)
-		
+
 		if parser.error != OK:
 			printerr("FormatFunction._init: detected error %s -> aborted." % [get_location_string()])
 			return
-		
+
 		parser.try_pop_token_type([YarnGlobals.TokenType.FormatFunctionStart])
 		format_text = "["
-		
+
 		var has_advanced: bool = false
 		while (
 			not parser.next_token_is([YarnGlobals.TokenType.FormatFunctionEnd] as Array[int])
 			and parser.error == OK
 		):
 			has_advanced = false
-			
+
 			if parser.next_token_is([YarnGlobals.TokenType.Text]):
 				format_text += parser.pop_token().value
 				has_advanced = true
@@ -894,21 +894,21 @@ class FormatFunction:
 				expression_value = InlineExpression.new(self, parser)
 				format_text += ' "{%d}" ' % expressionCount
 				has_advanced = true
-			
+
 			if not has_advanced:
 				printerr("FormatFunction._init: parser couldn't advance while parsing the insides of a format function! %s" % [get_location_string()])
-		
+
 		if parser.error != OK:
 			printerr("FormatFunction._init: an error occurred while parsing the format function -> aborted.")
 			return
-		
+
 		parser.pop_token() # consume FormatFunctionEnd token
 		format_text += "]"
-	
+
 	## Checks whether the upcoming token can be used to parse this node.
 	static func can_parse(parser: YarnParser) -> bool:
 		return parser.next_token_is([YarnGlobals.TokenType.FormatFunctionStart])
-	
+
 	## Returns a string representing this format function.
 	## TODO Make format prettier and add more information.
 	func get_tree_string(indent_level: int) -> String:
@@ -927,11 +927,11 @@ class InlineExpression:
 	## and creates an ExpressionNode from the tokens within.
 	func _init(parent: ParseNode, parser: YarnParser):
 		super(parent, parser)
-		
+
 		if parser.error != OK:
 			printerr("InlineExpression._init: detected error %s -> aborted." % [get_location_string()])
 			return
-		
+
 		parser.try_pop_token_type([YarnGlobals.TokenType.ExpressionFunctionStart])
 		expression_value = ExpressionNode.parse(self, parser)
 		parser.try_pop_token_type([YarnGlobals.TokenType.ExpressionFunctionEnd])
@@ -939,7 +939,7 @@ class InlineExpression:
 	## Checks whether the upcoming token can be used to parse this node.
 	static func can_parse(parser: YarnParser) -> bool:
 		return parser.next_token_is([YarnGlobals.TokenType.ExpressionFunctionStart])
-	
+
 	## Returns a string representing this inline expression.
 	## TODO make tree string nicer with added information about the expression.
 	func get_tree_string(indent_level: int) -> String:
@@ -962,14 +962,14 @@ class OptionStatement:
 	## and destination node name.
 	func _init(parent: ParseNode, parser: YarnParser):
 		super(parent, parser)
-		
+
 		if parser.error != OK:
 			printerr("OptionStatement._init: detected error %s -> aborted." % [get_location_string()])
 			return
-		
+
 		# begins with [[ (option start) token
 		parser.try_pop_token_type([YarnGlobals.TokenType.OptionStart])
-		
+
 		# read text. this may be either the destination node's name or text
 		# displayed to the user depending on whether or not an option delimit
 		# token follows
@@ -1022,27 +1022,31 @@ class OptionStatement:
 ## A node representing a function (expression) or client command.
 ##
 ## Subclass of ParseNode. Can represent a function (expression) or a client command.
-class CustomCommand:
+class Command:
 	extends ParseNode
 
-	enum Type { Expression, ClientCommand }
+	enum Type { ExpressionCommand, BuiltInCommand }
 	var command_type: int
-	
-	# The class will instantiate exactly one of the following: 
-	var expression: ExpressionNode
-	var client_command: String
+
+	# The class will instantiate exactly one of the following:
+	var expression_command: ExpressionNode = null
+	var built_in_command: String = ""
+	var built_in_command_args: Array[ParseNode] = []
 
 	## Consumes the begin/end command tokens and evaluates the
 	## command within as a function (expression) or client command.
 	func _init(parent: ParseNode, parser: YarnParser):
 		super(parent, parser)
-		
+
 		if parser.error != OK:
-			printerr("CustomCommand._init: detected error %s -> aborted." % [get_location_string()])
+			printerr("Command._init: detected error %s -> aborted." % [get_location_string()])
 			return
-		
+
+
+		if parser.enable_logs: print("Parsing command...")
+
 		parser.try_pop_token_type([YarnGlobals.TokenType.BeginCommand])
-		
+
 		# copy the tokens inside the command in a separate array
 		# before evaluating further
 		var command_tokens: Array[Lexer.Token] = []
@@ -1051,40 +1055,91 @@ class CustomCommand:
 			and parser.error == OK
 		):
 			command_tokens.append(parser.pop_token())
-		
+
 		if parser.error != OK:
-			printerr("CustomCommand._init: an error occurred while parsing command tokens %s -> aborted." % [get_location_string()])
+			printerr("Command._init: an error occurred while parsing command tokens %s -> aborted." % [get_location_string()])
 			return
-		
+
+		if parser.enable_logs: print("\t%d command tokens detected." % [command_tokens.size()])
+
 		parser.try_pop_token_type([YarnGlobals.TokenType.EndCommand])
-		
+
 		if command_tokens.size() == 0:
 			return
-		
+
 		# evaluate the command tokens
 		if (
 			command_tokens[0].token_type == YarnGlobals.TokenType.Identifier
 			and command_tokens[1].token_type == YarnGlobals.TokenType.LeftParen
 		):
-			# first token is an identifier and second is left parenthesis
-			# -> evaluate as function
-			#  -> create parser for the command
-			var p: YarnParser = YarnParser.new(command_tokens, parser.enable_logs)
-			var expression: ExpressionNode = ExpressionNode.parse(self, p)
-			command_type = Type.Expression
-			self.expression = expression
+			_parse_custom_command(parser, command_tokens)
 		else:
-			# text -> build-in command -> evaluate
-			command_type = Type.ClientCommand
-			self.client_command = command_tokens[0].value
-
+			_parse_built_in_command(parser, command_tokens)
+	
+	func _parse_custom_command(parser: YarnParser, command_tokens: Array[Lexer.Token]) -> void:
+		# first token is an identifier and second is left parenthesis
+		# -> evaluate as custom command (function)
+		#  -> create parser for the command
+		if parser.enable_logs: print("\tidentified to be a custom command")
+		command_type = Type.ExpressionCommand
+		
+		var p: YarnParser = YarnParser.new(command_tokens, parser.enable_logs)
+		var expression: ExpressionNode = ExpressionNode.parse(self, p)
+		expression_command = expression
+		
+		if p.error != OK:
+			parser.error = p.error
+	
+	func _parse_built_in_command(parser: YarnParser, command_tokens: Array[Lexer.Token]) -> void:
+		# text -> build-in command -> evaluate
+		if parser.enable_logs: print("\tidentified to be a built-in command")
+		command_type = Type.BuiltInCommand
+		
+		built_in_command = command_tokens[0].value
+		if parser.enable_logs: print("\tbuilt-in command name: %s" % built_in_command)
+		
+		if command_tokens.size() <= 1:
+			# no args -> done
+			return
+		command_tokens.pop_front() # remove command name, leave only args
+		
+		if parser.enable_logs:
+			print("\targs:")
+			for ct in command_tokens:
+				print("\t\t%s: %s" % [YarnGlobals.TokenType.find_key(ct.token_type), ct.value])
+		
+		# parse all args
+		var p: YarnParser = YarnParser.new(command_tokens, parser.enable_logs)
+		while p._tokens.size() > 0 and p.error == OK:
+			if p.next_token_is([YarnGlobals.TokenType.Number, YarnGlobals.TokenType.Variable]):
+				# number / variable arg
+				var value_node: ValueNode = ValueNode.new(self, p)
+				built_in_command_args.append(value_node)
+			elif p.next_token_is([YarnGlobals.TokenType.Identifier]):
+				# function arg
+				var expression: ExpressionNode = ExpressionNode.parse(self, p)
+				built_in_command_args.append(expression)
+			elif p.next_token_is([YarnGlobals.TokenType.Comma]):
+				# comma -> ignore
+				p.pop_token()
+			else:
+				printerr("Command._parse_built_in_command: unexpected arg token %s (value %s) %s" % [
+					YarnGlobals.TokenType.find_key((p._tokens.front() as Lexer.Token).token_type),
+					(p._tokens.front() as Lexer.Token).value,
+					get_location_string()
+				])
+				p.error = ERR_INVALID_DATA
+		
+		if p.error != OK:
+			parser.error = p.error
+	
 	## Returns a string representing this custom command. Depends on the command type.
 	func get_tree_string(indent_level: int) -> String:
 		match command_type:
-			Type.Expression:
-				return apply_tab(indent_level, "Expression: %s" % expression.get_tree_string(indent_level + 1))
-			Type.ClientCommand:
-				return apply_tab(indent_level, "Command: %s" % client_command)
+			Type.ExpressionCommand:
+				return apply_tab(indent_level, "Custom Command (Expression): %s" % expression_command.get_tree_string(indent_level + 1))
+			Type.BuiltInCommand:
+				return apply_tab(indent_level, "Built-In Command: %s" % built_in_command)
 		return ""
 
 	static func can_parse(parser: YarnParser) -> bool:
@@ -1113,11 +1168,11 @@ class Assignment:
 
 	func _init(parent: ParseNode, parser: YarnParser):
 		super(parent, parser)
-		
+
 		if parser.error != OK:
 			printerr("Assignment._init: detected error %s -> aborted." % [get_location_string()])
 			return
-		
+
 		# read <<set Variable to Value>>
 		parser.try_pop_token_type([YarnGlobals.TokenType.BeginCommand]) # <<
 		parser.try_pop_token_type([YarnGlobals.TokenType.Set]) # set
@@ -1129,7 +1184,7 @@ class Assignment:
 	## Returns a string representing the assignment.
 	func get_tree_string(indent_level: int) -> String:
 		var info: PackedStringArray = []
-		
+
 		info.append(apply_tab(indent_level, "set:"))
 		info.append(apply_tab(indent_level + 1, variable_name))
 		info.append(apply_tab(indent_level + 1, YarnGlobals.get_script().get_token_type_name(operation_type)))
@@ -1154,7 +1209,7 @@ class Assignment:
 
 
 ## A node representing an expression.
-## 
+##
 ## Subclass of ParseNode. Expressions encompass a wide range of things like:
 ## - math (1 + 2 - 5 * 3 / 10 % 2)
 ## - assignments
@@ -1164,27 +1219,27 @@ class ExpressionNode:
 	extends ParseNode
 
 	var expression_type: int # Value or FunctionCall
-	
+
 	# one of the following two will be set
 	var value: ValueNode
 	var function_name: String
-	
+
 	var function_params: Array[ExpressionNode] = []
-	
+
 	# Remove this constant if it causes any trouble.
 	# It's only used for stronger typing to ensure there are no typos.
 	const Lexer = preload("res://addons/godyarnit/core/compiler/lexer.gd")
-	
+
 
 	## Constructs an ExpressionNode from already existing arguments (without parsing).
 	## To parse an ExpressionNode, use [method parse] instead.
 	func _init(parent: ParseNode, parser: YarnParser, value: ValueNode, function_name: String = "", function_params: Array[ExpressionNode] = []):
 		super(parent, parser)
-		
+
 		if parser.error != OK:
 			printerr("ExpressionNode._init: detected error %s -> aborted." % [get_location_string()])
 			return
-		
+
 		if value != null:
 			self.expression_type = YarnGlobals.ExpressionType.Value
 			self.value = value
@@ -1197,7 +1252,7 @@ class ExpressionNode:
 	## Returns a string representing this expression.
 	func get_tree_string(indent_level: int) -> String:
 		var info: PackedStringArray = []
-		
+
 		match expression_type:
 			YarnGlobals.ExpressionType.Value:
 				return value.get_tree_string(indent_level)
@@ -1215,7 +1270,7 @@ class ExpressionNode:
 		# Use Djikstra's shunting-yard algorithm to convert the
 		# stream of infix expressions into postfix notation.
 		# Then, build a tree of expressions.
-		
+
 		var rpn: Array[Lexer.Token] = []  # stack for reverse Polish notation (= postfix notation)
 		var op_stack: Array[Lexer.Token] = []  # stack of operations
 
@@ -1269,14 +1324,14 @@ class ExpressionNode:
 					printerr("ExpressionNode.parse: unbalanced parenthesis in %s %s (case 1)" % [next.name, parent.get_location_string()])
 					parser.error = ERR_INVALID_DATA
 					return null
-				
+
 				# resolve sub expression before moving on
 				var left_paranthesis_found: bool = false
 				while op_stack.size() > 0:
 					if op_stack.back().token_type == YarnGlobals.TokenType.LeftParen:
 						left_paranthesis_found = true
 						break
-					
+
 					var p: Lexer.Token = op_stack.pop_back()
 					if p == null:
 						printerr("ExpressionNode.parse: unexpectedly reached end of op_stack at %s %s " % [next.name, parent.get_location_string()])
@@ -1284,13 +1339,13 @@ class ExpressionNode:
 						return null
 						break
 					rpn.append(p)
-				
+
 				if not left_paranthesis_found:
 					printerr("ExpressionNode.parse: unbalanced parenthesis in %s %s (case 2)" % [next.name, parent.get_location_string()])
 					parser.error = ERR_INVALID_DATA
 					return null
 					break
-				
+
 				# next token in op_stack left paren
 				# next parser token not allowed to be right paren or comma
 				if parser.next_token_is(
@@ -1365,13 +1420,13 @@ class ExpressionNode:
 
 			#record last token used
 			last = next
-			
+
 			# -> continue while-loop
-		
+
 		if parser.error != OK:
 			printerr("ExpressionNode.parse: an error occurred while parsing the expression content %s -> aborted." % [parent.get_location_string()])
 			return null
-		
+
 		# no more tokens : pop operators to output
 		while op_stack.size() > 0:
 			rpn.append(op_stack.pop_back())
@@ -1380,7 +1435,7 @@ class ExpressionNode:
 		if rpn.size() == 0:
 			printerr("ExpressionNode.parse: expression invalid or not found! %s" % [parent.get_location_string()])
 			return null
-		
+
 		# build expression tree
 		var first: Lexer.Token = rpn.front()
 		var eval_stack: Array[ExpressionNode] = []
@@ -1450,14 +1505,14 @@ class ExpressionNode:
 
 	# static func can_parse(parser)->bool:
 	# 	return false
-	
+
 	## Returns the string of the YarnGlobals.TokenType value
 	## that's equal to the given token type.
 	static func get_func_name(token_type: int) -> String:
 		for key in YarnGlobals.TokenType.keys():
 			if YarnGlobals.TokenType[key] == token_type:
 				return key
-		
+
 		return ""
 
 	## Checks whether the operation at the back of the given operator stack
@@ -1504,22 +1559,22 @@ class ExpressionNode:
 ## Subclass of ParseNode. Contains a Value object (see core/value.gd).
 class ValueNode:
 	extends ParseNode
-	
+
 	const Value = preload("res://addons/godyarnit/core/value.gd") # class representing a value and operations on it
 	const Lexer = preload("res://addons/godyarnit/core/compiler/lexer.gd")
-	
+
 	var value: Value
 
 	func _init(parent: ParseNode, parser: YarnParser, token: Lexer.Token = null):
 		super(parent, parser)
-		
+
 		if parser.error != OK:
 			printerr("ValueNode._init: detected error %s -> aborted." % [get_location_string()])
 			return
-		
+
 		var t: Lexer.Token = token
 		if t == null:
-			parser.try_pop_token_type(
+			t = parser.try_pop_token_type(
 				[
 					YarnGlobals.TokenType.Number,
 					YarnGlobals.TokenType.Variable,
@@ -1576,11 +1631,11 @@ class Operator:
 
 	func _init(parent: ParseNode, parser, op_type = null):
 		super(parent, parser)
-		
+
 		if parser.error != OK:
 			printerr("Operator._init: detected error %s -> aborted." % [get_location_string()])
 			return
-		
+
 		if op_type == null:
 			self.op_type = parser.pop_token(Operator.get_op_types()).token_type
 		else:
@@ -1660,7 +1715,7 @@ class Operator:
 ## and the number of arguments that it takes.
 class OperatorInfo:
 	enum Associativity { Left, Right, None }
-	
+
 	var associativity: int ## Item of the Associativity enum.
 	var precedence_score: int ## Operators with a higher precedence score are evaluated before those with a lower score.
 	var num_arguments: int ## The number of argument that this operator takes.

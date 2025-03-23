@@ -15,6 +15,7 @@ const DEFAULT_START: String = "Start"
 const YarnProgram = preload("res://addons/godyarnit/core/program/program.gd")
 const VirtualMachine = preload("res://addons/godyarnit/core/virtual_machine.gd")
 const YarnLibrary = preload("res://addons/godyarnit/core/libraries/library.gd")
+const Value = preload("res://addons/godyarnit/core/value.gd")
 
 var library: YarnLibrary
 var execution_complete: bool
@@ -186,12 +187,27 @@ func get_vm() -> VirtualMachine:
 
 
 ## Checks whether the given node has been visited before.
-func check_node_visited(node_name: String = _vm.get_current_node_name()) -> bool:
+func check_node_visited(node_name_value = _vm.get_current_node_name()) -> bool:
+	var node_name: String
+	if node_name_value is Value:
+		# called from Yarn script with arg
+		node_name = (node_name_value as Value).as_string()
+	else:
+		# called from code or from Yarn script without arg
+		node_name = node_name_value
 	return get_node_visit_count(node_name) > 0
 
 
 ## Gets how often the given node has been visited.
-func get_node_visit_count(node_name: String = _vm.get_current_node_name()) -> int:
+func get_node_visit_count(node_name_value = _vm.get_current_node_name()) -> int:
+	var node_name: String
+	if node_name_value is Value:
+		# called from Yarn script with arg
+		node_name = (node_name_value as Value).as_string()
+	else:
+		# called from code or from Yarn script without arg
+		node_name = node_name_value
+	
 	var visit_count: int = 0
 	if _visited_node_counts.has(node_name):
 		visit_count = _visited_node_counts[node_name]

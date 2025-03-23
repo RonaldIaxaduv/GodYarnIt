@@ -255,7 +255,7 @@ func finish_line():
 ## circumstances.
 func clear_text():
 	# hide name plate display
-	if name_plate_display:
+	if name_plate_display != null:
 		name_plate_display.visible = false
 	
 	# clear text display
@@ -282,8 +282,8 @@ func _on_dialogue_finished():
 ## Handles special GUI behaviour for certain commands
 ## like wait.
 ## Called by [signal yarn_runner.command_triggered]
-func _on_command_triggered(command: String, arguments: Array):
-	if command == "wait":
+func _on_command_triggered(command_name: String, arguments: Array):
+	if command_name == "wait":
 		print("GUI is waiting now...")
 		await yarn_runner.wait_timer.timeout
 		print("GUI's wait ended.")
@@ -325,25 +325,28 @@ func _on_next_line_prepared(line: String):
 		return
 	
 	print("setting next line...")
-
-	var name_plate_result: RegExMatch = name_plate_regex.search(line)
-	if name_plate_display:
-		if name_plate_result:
-			# line contains a name label -> display
-			var name_plate: String = name_plate_result.get_string()
-			line = line.replace(name_plate + ":", "") # remove name label from the string
-			line.strip_edges(true, false) # remove space after the name plate if there was one
-			name_plate_display.set_text(name_plate)
-			name_plate_display.visible = true
-		else:
-			# no name label on this line
-			name_plate_display.visible = false
-
+	
 	next_line = line
 	if should_display_immediately:
 		should_display_immediately = false
 		_display_next_line()
 
+func update_name_plate_text() -> void:
+	if name_plate_display == null:
+		return
+	
+	var name_plate_result: RegExMatch = name_plate_regex.search(next_line)
+	if name_plate_result == null:
+		# no name label on this line
+		name_plate_display.visible = false
+		return
+	
+	# line contains a name label -> display
+	var name_plate_text: String = name_plate_result.get_string()
+	next_line = next_line.replace(name_plate_text + ":", "") # remove name label from the string
+	next_line.strip_edges(true, false) # remove space after the name plate if there was one
+	name_plate_display.set_text(name_plate_text)
+	name_plate_display.visible = true
 
 ## Sets the text of the text display to next_line and
 ## resets its ratio of visible characters.
@@ -362,6 +365,7 @@ func _display_next_line():
 	print("displaying next line...")
 	
 	if not (config.has_unknown_output_type or next_line.is_empty()):
+		update_name_plate_text()
 		if config.is_rich_text_label:
 			text_display.parse_bbcode(next_line)
 		else:

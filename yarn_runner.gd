@@ -200,17 +200,17 @@ func _handle_line(line: DisplayedLine) -> int:
 func _handle_command(command) -> int:
 	# type of command: command.gd
 	if is_debug:
-		print("handling command: <%s>. args: %s" % [command.command, command.args])
+		print("handling command: <%s>. args: %s" % [command.command_name, command.args])
 
 	# If this command is the wait command, we have already verified that it
 	# has a valid argument in the virtual machine, so all that's left do to is
 	# to begin waiting only after the user has attempted to resume. We also emit
 	# command once it is resumed in order to notify any other interfaces
 	# that make use of the wait command
-	if command.command == "wait":
-		var time: float = float(command.args[0])
+	if command.command_name == "wait":
+		var time: float = command.args.back().as_number() #float(command.args[0])
 		is_waiting = true
-		command_triggered.emit(command.command, command.args)
+		command_triggered.emit(command.command_name, command.args)
 		if wait_timer.paused or not wait_timer.is_stopped():
 			wait_timer.stop()
 		wait_timer.wait_time = time
@@ -218,7 +218,7 @@ func _handle_command(command) -> int:
 		wait_timer.start()
 		print("runner is waiting now...")
 	else:
-		command_triggered.emit(command.command, command.args)
+		command_triggered.emit(command.command_name, command.args)
 
 	return YarnGlobals.HandlerState.ContinueExecution
 

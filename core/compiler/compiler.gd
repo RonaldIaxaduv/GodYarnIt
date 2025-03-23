@@ -355,8 +355,8 @@ func compile_header():
 func compile_statement(node: CompiledYarnNode, statement: YarnParser.Statement) -> void:
 	#print("compiling statement")
 	match statement.statement_type:
-		YarnGlobals.StatementTypes.CustomCommand:
-			compile_custom_command(node, statement.custom_command)
+		YarnGlobals.StatementTypes.Command:
+			compile_command(node, statement.command)
 		YarnGlobals.StatementTypes.ShortcutOptionGroup:
 			compile_shortcut_group(node, statement.shortcut_option_group)
 		YarnGlobals.StatementTypes.Block:
@@ -534,17 +534,38 @@ func compile_option(node: CompiledYarnNode, option: YarnParser.OptionStatement):
 		)
 
 
-## Compiles instructions for a custom command.
-func compile_custom_command(node: CompiledYarnNode, command: YarnParser.CustomCommand):
-	#print("compiling custom command")
+## Compiles instructions for a command.
+func compile_command(node: CompiledYarnNode, command: YarnParser.Command):
+	#print("compiling command")
 
-	if command.expression != null:
-		# compile function call
-		compile_expression(node, command.expression)
+	if command.command_type == Parser.Command.Type.ExpressionCommand:
+		# compile custom command (function) call
+		compile_expression(node, command.expression_command)
 	else:
-		# compile client command call
-		var command_string = command.client_command
-		add_instruction(YarnGlobals.ByteCode.RunCommand, node, [Operand.new(command_string)])
+		# compile built-in command call
+		
+		if command.built_in_command_args.is_empty():
+			# put the number of (lack of) args to stack
+			add_instruction(YarnGlobals.ByteCode.PushNumber, node, [Operand.new(0)])
+		else:
+			# evaluate all parameters
+			for arg in command.built_in_command_args:
+				if arg is Parser.ExpressionNode:
+					compile_expression(node, arg as Parser.ExpressionNode)
+				elif arg is Parser.ValueNode:
+					compile_value(node, arg as Parser.ValueNode)
+				else:
+					printerr("Compiler.compile_command: unrecognised type for build-in command arg in node %s %s" % [
+						node.node_name,
+						arg.get_location_string()
+					])
+
+			# put the number of of args to stack
+			add_instruction(YarnGlobals.ByteCode.PushNumber, node, [Operand.new(command.built_in_command_args.size())])
+		
+		# call command
+		var command_name = command.built_in_command
+		add_instruction(YarnGlobals.ByteCode.RunCommand, node, [Operand.new(command_name)])
 
 
 ## Compiles instructions for assigning values.
@@ -608,7 +629,6 @@ func compile_assignment(node: CompiledYarnNode, assignment: YarnParser.Assignmen
 func compile_expression(node: CompiledYarnNode, expression: YarnParser.ExpressionNode):
 	#print("compiling expression")
 
-	# expression = value || func call
 	match expression.expression_type:
 		YarnGlobals.ExpressionType.Value:
 			compile_value(node, expression.value)
@@ -685,8 +705,7 @@ static func print_tokens(node_name: String, tokens: Array[Lexer.Token] = []):
 	for token in tokens:
 		list.append(
 			(
-				"\t [%14s] %s (%s---line %s)\n"
-				% [
+				"\t [%14s] %s (%s|line %s)\n" % [
 					token.lexer_state,
 					YarnGlobals.get_script().get_token_type_name(token.token_type),
 					token.value,

@@ -3,14 +3,13 @@
 ## Used in the virtual machine.
 extends Object
 
-var command: String
-var args: PackedStringArray #Array[String]
+
+const Value = preload("res://addons/godyarnit/core/value.gd")
 
 
-func _init(command_and_args: String):
-	var result : PackedStringArray = command_and_args.strip_edges().split(" ")
-	self.command = result[0]
+var command_name: String
+var args: Array[Value]
 
-	if result.size() > 1:
-		result.remove_at(0)
-		args = result
+
+func _init(command_name: String):
+	self.command_name = command_name
