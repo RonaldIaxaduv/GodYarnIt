@@ -1111,11 +1111,21 @@ class Command:
 		# parse all args
 		var p: YarnParser = YarnParser.new(command_tokens, parser.enable_logs)
 		while p._tokens.size() > 0 and p.error == OK:
-			if p.next_token_is([YarnGlobals.TokenType.Number, YarnGlobals.TokenType.Variable]):
+			if p.next_token_is([
+				YarnGlobals.TokenType.Number,
+				YarnGlobals.TokenType.Str,
+				YarnGlobals.TokenType.TrueToken,
+				YarnGlobals.TokenType.FalseToken,
+				YarnGlobals.TokenType.Variable,
+				YarnGlobals.TokenType.NullToken
+			]):
 				# number / variable arg
 				var value_node: ValueNode = ValueNode.new(self, p)
 				built_in_command_args.append(value_node)
-			elif p.next_token_is([YarnGlobals.TokenType.Identifier]):
+			elif p.next_tokens_are([
+				YarnGlobals.TokenType.Identifier,
+				YarnGlobals.TokenType.LeftParen
+			]):
 				# function arg
 				var expression: ExpressionNode = ExpressionNode.parse(self, p)
 				built_in_command_args.append(expression)
@@ -1577,8 +1587,11 @@ class ValueNode:
 			t = parser.try_pop_token_type(
 				[
 					YarnGlobals.TokenType.Number,
+					YarnGlobals.TokenType.Str,
+					YarnGlobals.TokenType.FalseToken,
+					YarnGlobals.TokenType.TrueToken,
 					YarnGlobals.TokenType.Variable,
-					YarnGlobals.TokenType.Str
+					YarnGlobals.TokenType.NullToken,
 				]
 			)
 

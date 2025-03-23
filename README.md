@@ -54,7 +54,9 @@ Hence, I decided to go the long way and **gave the code a big face-lift and exte
 -   [X] built-in commands using expression args `<<wait $time>>`
 -   [X] support for BBCode `[b]bold[/b]` (**must use RichTextLabel**)
 -   [ ] Header info processing
--   [ ] Yarn 2.0+ functionalities like jumps `<<jump TargetNode>>` or variable declarations `<<declare $value = true as bool>>`
+-   [ ] Yarn 2.0+ functionalities
+	-   [X] jump command `<<jump "node_name">>` (works with function calls, too)
+	-   [ ] variable declarations `<<declare $value = true as bool>>`
 
 
 <a id="Installation"></a>

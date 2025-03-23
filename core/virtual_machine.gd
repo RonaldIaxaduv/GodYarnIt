@@ -240,67 +240,9 @@ func run_instruction(instruction: Instruction) -> bool:
 				execution_state = YarnGlobals.ExecutionState.Suspended
 
 		YarnGlobals.ByteCode.RunCommand: # handles built-in commands like wait
-			var command_name: String = instruction.operands[0].value
-
-			# TODO: allow for inline expressions and format functions in commands
-			if instruction.operands.size() > 1:
-				pass  #add format function
-
-			var command: Command = Command.new(command_name)
-			var expected_arg_count: int
-			var actual_arg_count: int = _state.pop_value().as_number()
-			if command.command_name == "wait":
-				expected_arg_count = 1
-				if actual_arg_count < expected_arg_count:
-					printerr("VirtualMachine.run_instruction: tried to execute a wait command without time argument. Command skipped.")
-				else:
-					var args: Array[Value] = [] as Array[Value]
-					for i in range(actual_arg_count):
-						args.push_front(_state.pop_value())
-					command.args = args
-					if (args.back() as Value).type != YarnGlobals.ValueType.Number:
-						printerr("VirtualMachine.run_instruction: wait command wasn't followed by an expression evaluating to a number. Command skipped.")
-					else:
-						var time: float = (args.back() as Value).as_number() #float(command.args[0])
-						if time > 0.0:
-							is_waiting = true
-							
-	#						var pause = command_handler.call(command)
-	#						if (
-	#							pause is GDScriptFunctionState
-	#							|| pause == YarnGlobals.HandlerState.PauseExecution
-	#						):
-	#							execution_state = YarnGlobals.ExecutionState.Suspended
-							
-							# since GDScriptFunctionState isn't a thing anymore in 4.0 and there is no exception handling, things will be a little messy here...
-							var prev_execution_state: int = execution_state
-							execution_state = YarnGlobals.ExecutionState.Suspended # always assume suspension
-							var resulting_state: int = await command_handler.call(command) # calls runner's _handle_command. await is obligatory, otherwise this line causes a break
-							if resulting_state != YarnGlobals.HandlerState.PauseExecution: # TODO FIXME: DEADLOCK! for the previous call to end, runner.resume is called, which calls dialogue.resume, which calls vm.resume - but the vm is still waiting here!
-								execution_state = prev_execution_state # return to prior execution state (if call was synchronous, this should be executed seemlessly hopefully...)
-							
-							if execution_state == YarnGlobals.ExecutionState.Suspended:
-								await self.resumed
-							
-							is_waiting = false
-						#else
-						#	trying to wait for 0 seconds -> no waiting at all
-			else:
-				# other command
-				
-#				var pause = command_handler.call(command)
-#				if (
-#					pause is GDScriptFunctionState
-#					|| pause == YarnGlobals.HandlerState.PauseExecution
-#				):
-#					execution_state = YarnGlobals.ExecutionState.Suspended
-				
-				# see if section above
-				var prev_execution_state: int = execution_state
-				execution_state = YarnGlobals.ExecutionState.Suspended
-				var resulting_state: int = command_handler.call(command)
-				if (resulting_state != YarnGlobals.HandlerState.PauseExecution):
-					execution_state = prev_execution_state
+			var success: bool = await _handle_command(instruction)
+			if not success:
+				return false
 
 		YarnGlobals.ByteCode.PushString: # pushes a String variable to the state stack
 			_state.push_value(instruction.operands[0].value)
@@ -326,33 +268,9 @@ func run_instruction(instruction: Instruction) -> bool:
 			_state.pop_value()
 			
 		YarnGlobals.ByteCode.CallFunc: # calls function with params on the state stack. any return values are pushed to the stack
-			var function_name: String = instruction.operands[0].value
-			var function: FunctionInfo = _dialogue.library.get_function(function_name)
-			
-			var expected_param_count: int = function.param_count
-			var actual_param_count: int = _state.pop_value().as_number()
-
-			if not function.check_param_count_valid(actual_param_count):
-				printerr("VirtualMachine.run_instruction: function %s expected %d parameters but got %d instead" % [
-					function_name, expected_param_count, actual_param_count
-				])
+			var success: bool = await _handle_function_call(instruction)
+			if not success:
 				return false
-
-			var result
-
-			if actual_param_count == 0:
-				result = await function.invoke()
-			else:
-				var params: Array[Value] = []
-				for i in range(actual_param_count):
-					params.push_front(_state.pop_value())
-
-				result = await function.invoke(params)
-				# print("function[%s] result[%s]" %[functionName, result._to_string()])
-
-			if function.returns_value:
-				_state.push_value(result)
-			pass
 			
 		YarnGlobals.ByteCode.PushVariable: # state stack contains a variable name. get that variable from the dialogue's variable storage and pushes it onto the state stack
 			var name: String = instruction.operands[0].value
@@ -433,6 +351,147 @@ func run_instruction(instruction: Instruction) -> bool:
 
 	return true
 
+func _handle_command(command_instruction: Instruction) -> bool:
+	var command_name: String = command_instruction.operands[0].value
+	
+	# TODO: allow for inline expressions and format functions in commands
+	if command_instruction.operands.size() > 1:
+		pass  #add format function
+	
+	var command: Command = Command.new(command_name)
+	var arg_count: int = _state.pop_value().as_number()
+	var args: Array[Value] = [] as Array[Value]
+	for i in range(arg_count):
+		args.push_front(_pop_resolved_value())
+	command.args = args
+	
+	var was_successful: bool
+	match command.command_name:
+		"wait":
+			was_successful = await _handle_wait(command)
+		"jump":
+			was_successful = _handle_jump(command)
+		_:
+			was_successful = await _handle_custom_command(command)
+	
+	return was_successful
+
+func _handle_wait(command: Command) -> bool:
+	if command.args.size() < 1:
+		printerr("VirtualMachine._handle_wait: tried to execute a wait command without time argument. Command skipped.")
+		return false
+	if (command.args.back() as Value).type != YarnGlobals.ValueType.Number:
+		printerr("VirtualMachine._handle_wait: wait command wasn't followed by an expression evaluating to a number. Command skipped.")
+		return false
+	
+	var wait_time: float = (command.args.back() as Value).as_number()
+	if wait_time <= 0.0:
+		return true
+	
+	is_waiting = true
+	
+	var prev_execution_state: int = execution_state
+	execution_state = YarnGlobals.ExecutionState.Suspended # always assume suspension
+	
+	var resulting_state: int = await command_handler.call(command) # calls runner's _handle_command. await is obligatory, otherwise this line causes a break
+	if resulting_state != YarnGlobals.HandlerState.PauseExecution: # TODO FIXME: DEADLOCK! for the previous call to end, runner.resume is called, which calls dialogue.resume, which calls vm.resume - but the vm is still waiting here!
+		execution_state = prev_execution_state # return to prior execution state (if call was synchronous, this should be executed seemlessly hopefully...)
+	
+	if execution_state == YarnGlobals.ExecutionState.Suspended:
+		await self.resumed
+	
+	is_waiting = false
+	return true
+
+func _handle_jump(command: Command) -> bool:
+	if command.args.size() < 1:
+		printerr("VirtualMachine._handle_jump: tried to execute a jump command without dialogue_name argument. Command skipped.")
+		return false
+	if (command.args.back() as Value).type != YarnGlobals.ValueType.Str:
+		printerr("VirtualMachine._handle_jump: jump command wasn't followed by an expression evaluating to a string. Command skipped.")
+		return false
+	_dialogue.dlog("VirtualMachine._handle_jump", "%d args detected" % command.args.size())
+	for arg in command.args:
+		_dialogue.dlog("", "\t%s" % arg.as_string())
+	
+	var dialogue_node_name: String = (command.args.back() as Value).as_string()
+	_dialogue.dlog("VirtualMachine._handle_jump", "trying to jump to dialogue %s" % dialogue_node_name)
+	if not _program.has_yarn_node(dialogue_node_name):
+		printerr("VirtualMachine._handle_jump: can't jump to dialogue node %s because it wasn't found in the program. Command skipped." % [dialogue_node_name])
+		return false
+	
+	#var prev_execution_state: int = execution_state
+	#execution_state = YarnGlobals.ExecutionState.Suspended
+	#
+	#var resulting_state: int = command_handler.call(command)
+	#if (resulting_state != YarnGlobals.HandlerState.PauseExecution):
+		#execution_state = prev_execution_state
+	
+	var resulting_state: int = node_complete_handler.call(_current_node.node_name)
+	set_current_node(dialogue_node_name)
+	_state.program_instruction_index -= 1
+	if resulting_state == YarnGlobals.HandlerState.PauseExecution:
+		execution_state = YarnGlobals.ExecutionState.Suspended
+	
+	return true
+
+func _handle_custom_command(command: Command) -> bool:
+	#var pause = command_handler.call(command)
+	#if (
+		#pause is GDScriptFunctionState
+		#|| pause == YarnGlobals.HandlerState.PauseExecution
+	#):
+		#execution_state = YarnGlobals.ExecutionState.Suspended
+	
+	var prev_execution_state: int = execution_state
+	execution_state = YarnGlobals.ExecutionState.Suspended
+	
+	var resulting_state: int = command_handler.call(command)
+	if (resulting_state != YarnGlobals.HandlerState.PauseExecution):
+		execution_state = prev_execution_state
+	
+	return true
+
+func _handle_function_call(instruction: Instruction) -> bool:
+	var function_name: String = instruction.operands[0].value
+	var function: FunctionInfo = _dialogue.library.get_function(function_name)
+	
+	var expected_param_count: int = function.param_count
+	var actual_param_count: int = _state.pop_value().as_number()
+
+	if not function.check_param_count_valid(actual_param_count):
+		printerr("VirtualMachine.run_instruction: function %s expected %d parameters but got %d instead" % [
+			function_name, expected_param_count, actual_param_count
+		])
+		return false
+
+	var result
+
+	if actual_param_count == 0:
+		result = await function.invoke()
+	else:
+		var params: Array[Value] = []
+		for i in range(actual_param_count):
+			params.push_front(_pop_resolved_value())
+
+		result = await function.invoke(params)
+		# print("function[%s] result[%s]" %[functionName, result._to_string()])
+
+	if function.returns_value:
+		_state.push_value(result)
+	
+	return true
+
+## Pops value from _state. Strings (which are stored using their ID) will be resolved
+## to their value.
+func _pop_resolved_value() -> Value:
+	var value: Value = _state.pop_value()
+	if value.type == YarnGlobals.ValueType.Str:
+		var string_id: String = value.as_string()
+		var registered_string: String = _program.resolve_yarn_string(string_id)
+		_dialogue.dlog("VirtualMachine._pop_resolved_value", "resolved string_id %s to string %s" % [string_id, registered_string])
+		value.set_value(registered_string)
+	return value
 
 ## Class representing the state of the virtual machine.
 ##

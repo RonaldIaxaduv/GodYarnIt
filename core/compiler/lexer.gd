@@ -146,6 +146,10 @@ func create_states() -> void:
 	_states[command_or_expression].add_transition(YarnGlobals.TokenType.LeftParen, EXPRESSION) # custom command
 	_states[command_or_expression].add_transition(YarnGlobals.TokenType.EndCommand, BASE, true)
 	_states[command_or_expression].add_transition(YarnGlobals.TokenType.Number, command_or_expression) # arg for built-in command
+	_states[command_or_expression].add_transition(YarnGlobals.TokenType.Str, command_or_expression) # arg for built-in command
+	_states[command_or_expression].add_transition(YarnGlobals.TokenType.FalseToken, command_or_expression) # arg for built-in command
+	_states[command_or_expression].add_transition(YarnGlobals.TokenType.TrueToken, command_or_expression) # arg for built-in command
+	_states[command_or_expression].add_transition(YarnGlobals.TokenType.NullToken, command_or_expression) # arg for built-in command
 	_states[command_or_expression].add_transition(YarnGlobals.TokenType.Variable, command_or_expression) # arg for built-in command
 	_states[command_or_expression].add_transition(YarnGlobals.TokenType.Identifier, command_or_expression) # arg for built-in command
 	_states[command_or_expression].add_transition(YarnGlobals.TokenType.Comma, command_or_expression) # arg for built-in command

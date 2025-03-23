@@ -28,7 +28,7 @@ Let's test whether format functions work. Set the test number to... #line:20c94d
 	<<set $test_number = 4>>
 Ordinal numbers - I came in {$test_number}[ordinal {$test_number} one="st" two="nd" few="rd" other="th"] place. #line:b15e688b
 Plurals - I've got [plural {$test_number} one="one apple" other="% apples"]. #line:e5130c58
-Selection - test number is [select {$test_number} 1="one" 2="two" other="something other than zero or one"]. #line:b65840ef 
+Selection - test number is [select {$test_number} 1="one" 2="two" other="something other than one or two"]. #line:b65840ef 
 Format function test done! #line:3209528a
 [[Start]] #line:62345552
 

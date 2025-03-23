@@ -653,27 +653,27 @@ func compile_expression(node: CompiledYarnNode, expression: YarnParser.Expressio
 
 
 ## Compiles instructions for a value.
-func compile_value(node: CompiledYarnNode, value: YarnParser.ValueNode):
+func compile_value(node: CompiledYarnNode, value_node: YarnParser.ValueNode):
 	#print("compiling value")
 
 	# push value to stack
-	match value.value.type:
+	match value_node.value.type:
 		YarnGlobals.ValueType.Number:
-			add_instruction(YarnGlobals.ByteCode.PushNumber, node, [Operand.new(value.value.as_number())])
+			add_instruction(YarnGlobals.ByteCode.PushNumber, node, [Operand.new(value_node.value.as_number())])
 		YarnGlobals.ValueType.Str:
 			var id: String = register_string(
-				value.value.as_string(), node.node_name, "", value.node_line_number, []
+				value_node.value.as_string(), node.node_name, "", value_node.node_line_number, []
 			)
 			add_instruction(YarnGlobals.ByteCode.PushString, node, [Operand.new(id)])
 		YarnGlobals.ValueType.Boolean:
-			add_instruction(YarnGlobals.ByteCode.PushBool, node, [Operand.new(value.value.as_bool())])
+			add_instruction(YarnGlobals.ByteCode.PushBool, node, [Operand.new(value_node.value.as_bool())])
 		YarnGlobals.ValueType.Variable:
-			add_instruction(YarnGlobals.ByteCode.PushVariable, node, [Operand.new(value.value.variable)])
+			add_instruction(YarnGlobals.ByteCode.PushVariable, node, [Operand.new(value_node.value.variable)])
 		YarnGlobals.ValueType.Nullean:
 			add_instruction(YarnGlobals.ByteCode.PushNull, node)
 		_:
 			printerr("Compiler.compile_value: unrecognized value node type: %s (node %s)" % [
-				value.value.type,
+				value_node.value.type,
 				node.node_name
 			])
 			error = ERR_INVALID_DATA

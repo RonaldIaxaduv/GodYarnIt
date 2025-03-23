@@ -3,6 +3,10 @@
 ## Contains the program's name, yarn strings and compiled yarn nodes.
 extends Resource
 
+
+const YarnStringContainer = preload("res://addons/godyarnit/core/program/yarn_string_container.gd")
+
+
 var program_name: String
 var yarn_strings: Dictionary = {} # type [String, yarn_string_container.gd] -> (id: string+metadata), copied over from compiler._registered_string_table 
 var yarn_nodes: Dictionary = {} # type [String, compiled_yarn_node.gd] -> (node name, compiled yarn node)
@@ -22,13 +26,18 @@ func get_node_tags(name: String) -> Array:
 	return yarn_nodes[name].tags
 
 
-func get_yarn_string(key: String) -> String:
-	return yarn_strings[key]
+func resolve_yarn_string(string_id: String) -> String:
+	var string_container: YarnStringContainer = yarn_strings.get(string_id, null) as YarnStringContainer
+	return string_container.text if string_container != null else ""
 
 
 func get_node_text(name: String) -> String:
-	var key: String = yarn_nodes[name].source_id
-	return get_yarn_string(key)
+	var node = yarn_nodes.get(name, null)
+	if node == null:
+		return ""
+	
+	var string_id: String = node.source_id
+	return resolve_yarn_string(string_id)
 
 
 func has_yarn_node(name: String) -> bool:

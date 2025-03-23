@@ -212,7 +212,7 @@ func _handle_line(line: DisplayedLine) -> int:
 ## TODO : add a way to add commands that suspend the run state.
 func _handle_command(command) -> int:
 	# type of command: command.gd
-	if enable_logs: print("handling command: <%s>. args: %s" % [command.command_name, command.args])
+	if enable_logs: print("handling command %s (%d args)" % [command.command_name, command.args.size()])
 
 	# If this command is the wait command, we have already verified that it
 	# has a valid argument in the virtual machine, so all that's left do to is

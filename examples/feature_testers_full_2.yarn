@@ -6,6 +6,7 @@ Please select which feature you would like to test.  #line:85634fce // note: Opt
 [[wait | Wait_Test]] #line:c07bf561
 [[Custom Functions | Custom_Functions_Test]] #line:7ad573ad
 [[Custom Commands | Custom_Commands_Test]] #line:e3d9d2d3
+[[Jump Command | Jump_Command_Test]] #line:71394da9 
 
 ===
 
@@ -19,7 +20,7 @@ tags:
 Let's test whether waiting works. #line:4e0106
 This <<wait 0.5>> is <<wait 1.0>> a <<wait 3.0>> test. #line:404ff419
 <<set $waiting_time = 5.0>>
-And this is <<wait $waiting_time>> another. #line:ed47d5ec
+And this <<wait $waiting_time>> will test your patience. #line:ed47d5ec
 Waiting test done! #line:7f50913f
 [[Start]] #line:2a380c30
 
@@ -75,11 +76,36 @@ Next, a random int between 0 and 10 will be printed. (Command with static args) 
 <<PrintRandomIntInRange(0, 10)>>
 Now, let's print a random int between {$test_number1} and {$test_number2}. (Command with variable args) #line:fe20fec5
 <<PrintRandomIntInRange($test_number1, $test_number2)>>
-The following print will happen a bit slower because it's async. #line:d5030e8d 
+The following print will happen a bit slower because it's async. #line:d5030e8d
 <<PrintIntAsync()>>
-Finally, just for funsies, let's call a function with a return value as a command. #line:28e5d8f6 
+Finally, just for funsies, let's call a function with a return value as a command. #line:28e5d8f6
 <<Apple(1, false)>>
 Custom commands test done! #line:645c5d79
 [[Start]] #line:64007cf7
+
+===
+
+
+
+
+title: Jump_Command_Test
+tags:
+---
+
+Let's test whether the jump command works. #line:5b7013bf
+<<jump "Jump_Command_Test_2">>
+
+===
+
+
+
+
+title: Jump_Command_Test_2
+tags:
+---
+
+It does, yay! #line:5b4803e2 
+Jump command test done! #line:d4d2f88d 
+[[Start]] #line:60594099 
 
 ===

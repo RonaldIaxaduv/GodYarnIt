@@ -231,7 +231,7 @@ class FormatFunctionData:
 ## - language-dependent ordinal numbers (first, second etc.)
 ## TODO FIXME: slightly suboptimal performance due to missing RegEx pre-compilation.
 func expand_format_functions(input: String, locale: String, enable_logs: bool) -> String:
-	if enable_logs: print("detected locale: %s" % locale)
+	#if enable_logs: print("detected locale: %s" % locale)
 	var processed_locale: String = locale.split("_")[0]
 	var formatted_line: String = input
 

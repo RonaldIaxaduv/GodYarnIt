@@ -182,9 +182,6 @@ func select_option(option_index: int):
 ## If the current line has already been finished,
 ## it will display the next non-empty line.
 func finish_line():
-	print("logs enabled: %s" % enable_logs)
-	print("runner null: %s" % [yarn_runner == null])
-	print("runner logs enabled: %s" % ["" if yarn_runner == null else ("%s" % yarn_runner.enable_logs)])
 	if is_showing_options:
 		if enable_logs:
 			print("line cannot be finished: currently showing options.")
