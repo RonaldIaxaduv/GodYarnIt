@@ -12,7 +12,6 @@ script = ExtResource("1_fdpe7")
 CompileButton = NodePath("VBoxContainer/CompilationContainer/CompileButton")
 ShowTokensCheckBox = NodePath("VBoxContainer/CompilationContainer/ShowTokensCheckBox")
 PrintTreeCheckBox = NodePath("VBoxContainer/CompilationContainer/PrintTreeCheckBox")
-PrintLogsCheckBox = NodePath("VBoxContainer/CompilationContainer/PrintLogsCheckBox")
 OpenDialog = NodePath("VBoxContainer/OpenDialog")
 Dialog = NodePath("VBoxContainer/PopupDialog")
 TestButton = NodePath("VBoxContainer/PopupDialog/TestButton")
@@ -39,10 +38,6 @@ text = "Print Tokens"
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Print Tree"
-
-[node name="PrintLogsCheckBox" type="CheckBox" parent="VBoxContainer/CompilationContainer"]
-layout_mode = 2
-text = "Print Logs"
 
 [node name="OpenDialog" type="Button" parent="VBoxContainer"]
 visible = false

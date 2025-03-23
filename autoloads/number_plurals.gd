@@ -7,12 +7,67 @@ extends Node
 
 enum PluralCase { Zero, One, Two, Few, Many, Other, NoPluralisation }
 
+enum SupportedLocale {
+	AST,
+	BM,
+	BO,
+	CA,
+	DE,
+	DZ,
+	EN,
+	ET,
+	FI,
+	FY,
+	GL,
+	IA,
+	ID,
+	IG,
+	II,
+	IN,
+	IO,
+	IT,
+	JA,
+	JBO,
+	JI,
+	JV,
+	JW,
+	KDE,
+	KEA,
+	KM,
+	KO,
+	LKT,
+	LO,
+	MS,
+	MY,
+	NL,
+	NQO,
+	OSA,
+	ROOT,
+	SAH,
+	SC,
+	SCN,
+	SES,
+	SG,
+	SU,
+	SV,
+	SW,
+	TH,
+	TO,
+	UR,
+	VI,
+	WO,
+	YI,
+	YO,
+	YUE,
+	ZH
+}
+
 #################### PLURAL #########################
 #################### Current Cardinal Plural Support:
 #################### - "en", "ast", "ca", "de", "et", "fi", "fy", "gl", "ia", "io", "it", "ji", "nl", "sc", "scn", "sv", "sw", "ur", "yi":
 #################### - 	"bm","bo", "dz", "id", "ig", "ii", "in", "ja", "jbo",  "jv", "jw", "kde", "kea",
 ####################    "km", "ko", "lkt", "lo", "ms","my","nqo", "osa", "root", "sah", "ses", "sg", "su",
-####################    "th","to", "vi", "wo", "yo", "yue", "zh
+####################    "th","to", "vi", "wo", "yo", "yue", "zh"
 
 
 ## Get the string version of the PluralCase.
@@ -28,7 +83,7 @@ func get_plural_case_string(pcase: int) -> String:
 ## The returned value is an item of the enum PluralCase.
 ## Returns PluralCase.NoPluralisation if the locale isn't recognised.
 func get_plural_case(locale: String, value: float) -> int:
-	match locale:
+	match locale.to_lower():
 		"bm", "bo", "dz", "id", "ig", "ii", "in", "ja", "jbo", "jv", "jw", "kde", "kea", "km", "ko", "lkt", "lo", "ms", "my", "nqo", "osa", "root", "sah", "ses", "sg", "su", "th", "to", "vi", "wo", "yo", "yue", "zh":
 			return __get_plural_case_0(value)
 		"am", "as", "bn", "fa", "gu", "hi", "kn", "zu":
@@ -108,6 +163,8 @@ func get_plural_case(locale: String, value: float) -> int:
 	return PluralCase.NoPluralisation
 
 
+#region PLURAL CASES
+
 ## "bm", "bo", "dz", "id", "ig", "ii", "in", "ja",
 ## "jbo", "jv", "jw", "kde", "kea", "km", "ko", "lkt",
 ## "lo", "ms", "my", "nqo", "osa", "root", "sah", "ses",
@@ -151,7 +208,7 @@ func __get_plural_case_3(value: float) -> int:
 func __get_plural_case_4(value: float) -> int:
 	var i: int = int(value)
 	var v: int = step_decimals(value)
-
+	
 	if (i == 1) && (v == 0):
 		return PluralCase.One
 	else:
@@ -641,6 +698,8 @@ func __get_plural_case_35(value: float) -> int:
 		return PluralCase.Many
 	return PluralCase.Other
 
+#endregion PLURAL CASES
+
 
 ################ ORDINAL #####################
 
@@ -649,7 +708,7 @@ func __get_plural_case_35(value: float) -> int:
 ## The returned value is an item of the enum PluralCase.
 ## Returns PluralCase.NoPluralisation if the locale isn't recognised.
 func get_ordinal_case(locale: String, value: float) -> int:
-	match locale:
+	match locale.to_lower():
 		"af", "am", "an", "ar", "bg", "bs", "ce", "cs", "da", "de", "dsb", "el", "es", "et", "eu", "fa", "fi", "fy", "gl", "gsw", "he", "hr", "hsb", "ia", "id", "in", "is", "iw", "ja", "km", "kn", "ko", "ky", "lt", "lv", "ml", "mn", "my", "nb", "nl", "pa", "pl", "prg", "ps", "pt", "root", "ru", "sd", "sh", "si", "sk", "sl", "sr", "sw", "ta", "te", "th", "tr", "ur", "uz", "yue", "zh", "zu":
 			return __get_ordinal_case_36(value)
 		"sv":
@@ -701,6 +760,8 @@ func get_ordinal_case(locale: String, value: float) -> int:
 
 	return PluralCase.NoPluralisation
 
+
+#region ORDINAL CASES
 
 ## "af", "am", "an", "ar", "bg", "bs", "ce", "cs", "da",
 ## "de", "dsb", "el", "es", "et", "eu", "fa", "fi", "fy",
@@ -843,10 +904,10 @@ func __get_ordinal_case_48(value: float) -> int:
 
 ## "en"
 func __get_ordinal_case_49(value: float) -> int:
-	var v := int(ceil(abs(value)))
-
-	# printerr("v:%s value:%s" % [v, value])
-
+	var v: int = int(ceil(abs(value)))
+	
+	#print("v=%d, value=%f" % [v, value])
+	
 	if (v % 10 == 1) && !(v % 100 == 11):
 		return PluralCase.One
 	if (v % 10 == 2) && !(v % 100 == 12):
@@ -1004,6 +1065,8 @@ func __get_ordinal_case_58(value: float) -> int:
 	if n == 5 || n == 6:
 		return PluralCase.Many
 	return PluralCase.Other
+
+#endregion ORDINAL CASES
 
 
 ## Gets an integer representation of what is after the dot in a float value.

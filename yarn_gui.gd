@@ -24,14 +24,30 @@ signal gui_shown ## A signal emitted when `show_gui` has been called.
 signal gui_hidden ## A signal emitted when `hide_gui` has been called.
 
 
-@export var _yarn_runner_path : NodePath ## Path to the YarnRunner used to handle the execution of yarn files.
-#	set = set_yarn_runner_path
-@export var _text_display_path : NodePath ## Used for displaying dialogue text. Path to any node used for displaying text, especially RichTextLabel or Label. (More specifically: must point to a node that has a `set_text` method.)
-#	set = set_text_display_path
-@export var _name_plate_display_path : NodePath ## Used for displaying speakers' names. Path to any node used for displaying text. (More specifically: must point to a node that has a `set_text` method.)
-#	set = set_name_plate_display_path
-@export var _option_display_paths : Array[NodePath] ## Used for displaying shortcut options and options with displayed text. Paths to any nodes used for displaying text. (More specifically: must point to nodes that have a `set_text` method.) If using buttons, they are automatically assigned a Callable.
-#	set = set_option_display_paths
+@export var _yarn_runner_path : NodePath: ## Path to the YarnRunner used to handle the execution of yarn files.
+	get:
+		return _yarn_runner_path
+	set(value):
+		_yarn_runner_path = value
+		_update_yarn_runner()
+@export var _text_display_path : NodePath: ## Used for displaying dialogue text. Path to any node used for displaying text, especially RichTextLabel or Label. (More specifically: must point to a node that has a `set_text` method.)
+	get:
+		return _text_display_path
+	set(value):
+		_text_display_path = value
+		_update_text_display_path()
+@export var _name_plate_display_path : NodePath: ## Used for displaying speakers' names. Path to any node used for displaying text. (More specifically: must point to a node that has a `set_text` method.)
+	get:
+		return _name_plate_display_path
+	set(value):
+		_name_plate_display_path = value
+		_update_name_plate_display_path()
+@export var _option_display_paths : Array[NodePath]: ## Used for displaying shortcut options and options with displayed text. Paths to any nodes used for displaying text. (More specifically: must point to nodes that have a `set_text` method.) If using buttons, they are automatically assigned a Callable.
+	get:
+		return _option_display_paths
+	set(value):
+		_option_display_paths = value
+		_update_option_display_paths()
 
 @export var _text_speed : int = 1 ## Controls the rate at which the text is displayed.
 
@@ -63,86 +79,34 @@ var should_display_immediately: bool = true ## If set to true, the next line set
 var is_showing_options: bool = false ## True if the GUI is currently showing shortcut options or a dialog option with text.
 var dialogue_has_finished: bool = false ## True if the dialog has finished.
 
+var enable_logs: bool:
+	get:
+		if yarn_runner == null:
+			return false
+		else:
+			return yarn_runner.enable_logs
+var is_ready: bool = false
+
 
 ## Prepares the yarn runner, text display, name plate display and options display.
 func _ready():
 	name_plate_regex = RegEx.new()
 	name_plate_regex.compile(NAME_TAG_PATTERN) # used to search for speaker's name tag
-
-	# connect the yarn runner's signals to this GUI's methods
-	if _yarn_runner_path:
-		yarn_runner = get_node(_yarn_runner_path)
-		if yarn_runner:
-			yarn_runner.next_line_prepared.connect(Callable(self, "_on_next_line_prepared"))
-			yarn_runner.node_started.connect(Callable(self, "_on_node_started"))
-			yarn_runner.options_prepared.connect(Callable(self, "_on_options_prepared"))
-			yarn_runner.dialogue_finished.connect(Callable(self, "_on_dialogue_finished"))
-			yarn_runner.command_triggered.connect(Callable(self, "_on_command_triggered"))
-		else:
-			printerr("Yarn GUI: %s does not point to a yarn runner!" % _yarn_runner_path)
-	else:
-		printerr("_yarn_runner_path for the Yarn GUI hasn't been set. This means that yarn dialogues cannot be run.")
-
-	# prepare the text UI for displaying the dialogue text
-	if _text_display_path:
-		text_display = get_node(_text_display_path)
-		if text_display:
-			if text_display is RichTextLabel:
-				config.is_rich_text_label = true
-			elif text_display is Label:
-				pass
-			elif not text_display.has_method("set_text"):
-				printerr("_text_display_path for the Yarn GUI did not point to a node with a set_text method. No text will be displayed.")
-				config.has_unknown_output_type = true
-		else: # text == null
-			printerr("Yarn GUI: %s does not point to a text display. No text will be displayed." % _text_display_path)
-			config.has_unknown_output_type = true
-	else:
-		printerr("_text_display_path for the Yarn GUI hasn't been set. No text will be displayed.")
-		config.has_unknown_output_type = true
 	
-	# prepare the text UI for displaying the speaker's name
-	if _name_plate_display_path:
-		name_plate_display = get_node(_name_plate_display_path)
-		if name_plate_display != null:
-			if !name_plate_display.has_method("set_text"):
-				printerr("Yarn GUI's name plate couldn't be set: _name_plate_display_path must point to a node with a set_text method!")
-				name_plate_display = null
-		else:
-			printerr("Yarn GUI: %s does not point to a text display. No name plates will be displayed." % _name_plate_display_path)
-	else:
-		printerr("_name_plate_display_path for the Yarn GUI hasn't been set. If the dialogues contain speakers' names, they won't be displayed.")
+	is_ready = true
 	
-	# prepare the text UIs for displaying options
-	if _option_display_paths.size() == 0:
-		printerr("_option_display_paths for the Yarn GUI hasn't been populated. This will cause faulty behaviour if the dialogue uses any shortcut options or options with displayed text!")
-	else:
-		option_displays.clear()
-		for option_display_path in _option_display_paths:
-			option_displays.push_back(get_node(option_display_path))
-			
-			if option_displays.back():
-				if not option_displays.back().has_method("set_text"):
-					printerr("%s in the Yarn GUI's option path does not point to a node with a set_text method! This node will not be added to the options array.")
-					option_displays.pop_back()
-					continue
-				
-				if option_displays.back().has_signal("pressed"):
-					option_displays.back().pressed.connect(Callable(self, "select_option").bindv([option_displays.size() - 1]))
-			else:
-				printerr("Yarn GUI: %s does not point to a text display. This option display will not be displayed." % option_display_path)
-		
-		print("Yarn GUI's options array has been populated with %d elements.\n
-			Please ensure that there are no shortcut options with more branches than there
-			are elements in the array as this would cause faulty behaviour!" % [option_displays.size()])
-
+	_update_yarn_runner()
+	_update_text_display_path()
+	_update_name_plate_display_path()
+	_update_option_display_paths()
+	
 	hide_options()
 
 
 ## Displays the dialogue at the given text speed.
 ## TODO FIXME: there might be code order issues here (see second paragraph for more details).
 func _process(delta: float) -> void:
-	if yarn_runner.is_waiting:
+	if yarn_runner == null or yarn_runner.is_waiting:
 		# don't change the text during waiting times!
 		return
 	
@@ -218,8 +182,12 @@ func select_option(option_index: int):
 ## If the current line has already been finished,
 ## it will display the next non-empty line.
 func finish_line():
+	print("logs enabled: %s" % enable_logs)
+	print("runner null: %s" % [yarn_runner == null])
+	print("runner logs enabled: %s" % ["" if yarn_runner == null else ("%s" % yarn_runner.enable_logs)])
 	if is_showing_options:
-		print("line cannot be finished: currently showing options.")
+		if enable_logs:
+			print("line cannot be finished: currently showing options.")
 		return
 
 	if dialogue_has_finished:
@@ -227,14 +195,14 @@ func finish_line():
 			yarn_runner.start()
 		else:
 			hide_gui()
-			print("line cannot be finished: dialogue has already finished")
+			if enable_logs: print("line cannot be finished: dialogue has already finished")
 			return
 
 	if line_has_finished:
-		print("line has already finished displaying.")
+		if enable_logs: print("line has already finished displaying.")
 		
 		if next_line.is_empty():
-			print("next line is empty or hasn't been prepared yet. skipping to next non-empty line.")
+			if enable_logs: print("next line is empty or hasn't been prepared yet. skipping to next non-empty line.")
 			should_display_immediately = true
 			await yarn_runner.advance_dialogue()
 		elif not next_line.is_empty():
@@ -242,7 +210,7 @@ func finish_line():
 			_display_next_line()
 		
 	else:
-		print("finishing displaying next line.")
+		if enable_logs: print("finishing displaying next line.")
 		line_has_finished = true
 		elapsed_line_time += full_line_time
 		await yarn_runner.advance_dialogue()
@@ -284,9 +252,9 @@ func _on_dialogue_finished():
 ## Called by [signal yarn_runner.command_triggered]
 func _on_command_triggered(command_name: String, arguments: Array):
 	if command_name == "wait":
-		print("GUI is waiting now...")
+		if enable_logs: print("GUI is waiting now...")
 		await yarn_runner.wait_timer.timeout
-		print("GUI's wait ended.")
+		if enable_logs: print("GUI's wait ended.")
 		_display_next_line()
 
 
@@ -324,7 +292,7 @@ func _on_next_line_prepared(line: String):
 	if config.has_unknown_output_type:
 		return
 	
-	print("setting next line...")
+	if enable_logs: print("setting next line...")
 	
 	next_line = line
 	if should_display_immediately:
@@ -355,14 +323,14 @@ func update_name_plate_text() -> void:
 ## [method _on_next_line_prepared] beforehand.
 func _display_next_line():
 	if yarn_runner.is_waiting:
-		print("waiting for runner to resume before displaying line...")
+		if enable_logs: print("waiting for runner to resume before displaying line...")
 		#await yarn_runner.resumed
 		await yarn_runner.wait_timer.timeout
 		#return
 	
 	line_has_finished = false
 	
-	print("displaying next line...")
+	if enable_logs: print("displaying next line...")
 	
 	if not (config.has_unknown_output_type or next_line.is_empty()):
 		update_name_plate_text()
@@ -382,75 +350,105 @@ func _display_next_line():
 		next_line = ""
 
 
-### Setter method of [member _yarn_runner_path].
-### Checks whether the path contains a valid yarn runner.
-#func set_yarn_runner_path(node_path: NodePath):
-#	print("yarn runner path: %s" % node_path)
-#	_yarn_runner_path = node_path.get_as_property_path()
-#
-#	if get_node(node_path):
-#		if get_node(_yarn_runner_path) is YarnRunner:
-#			yarn_runner = get_node(_yarn_runner_path)
-#		else:
-#			printerr("The passed node is not a yarn runner node.")
-#			yarn_runner = null
-#	else:
-#		yarn_runner = null
-#
-#
-### Setter method of [member _text_display_path].
-### Checks whether the path contains a valid display
-#func set_text_display_path(node_path: NodePath):
-#	print("text display path: %s" % node_path)
-#	_text_display_path = node_path.get_as_property_path()
-#
-#	if _text_display_path:
-#		text_display = get_node(_text_display_path)
-#		if text_display:
-#			if text_display is RichTextLabel:
-#				config.is_rich_text_label = true
-#			elif text_display is Label:
-#				pass
-#			elif not text_display.has_method("set_text"):
-#				printerr("_text_display_path for the Yarn GUI did not point to a node with a set_text method. No text will be displayed.")
-#				config.has_unknown_output_type = true
-#		else: # text_display == null
-#			printerr("_text_display_path for the Yarn GUI did not point to a node. No text will be displayed.")
-#			config.has_unknown_output_type = true
-#	else:
-#		config.has_unknown_output_type = true
-#
-#
-### Setter method of [member _name_plate_display_path].
-### Checks whether the path contains a valid display.
-#func set_name_plate_display_path(node_path: NodePath):
-#	print("name plate path: %s" % node_path)
-#	_name_plate_display_path = node_path.get_as_property_path()
-#
-#	if _name_plate_display_path:
-#		name_plate_display = get_node(_name_plate_display_path)
-#		if name_plate_display == null:
-#			printerr("Yarn GUI's name plate path does not point to a node")
-#		if not name_plate_display.has_method("set_text"):
-#			printerr("Yarn GUI's name plate couldn't be set: _name_plate_display_path must point to a node with a set_text method!")
-#			name_plate_display = null
-#
-#
-### Setter method of [member _option_display_paths].
-### Checks whether all paths contain a valid display.
-#func set_option_display_paths(node_paths: Array[NodePath]):
-#	_option_display_paths = node_paths
-#
-#	if _option_display_paths.size() > 0:
-#		option_displays.clear()
-#		for option_display_path in _option_display_paths:
-#			print("option display path: %s" % [option_display_path])
-#			option_displays.push_back(get_node(option_display_path.get_as_property_path()))
-#
-#			if not option_displays.back().has_method("set_text"):
-#				printerr("%s in the Yarn GUI's option path does not point to a node with a set_text method! This node will not be added to the options array.")
-#				option_displays.pop_back()
-#				continue
+## Setter method of [member _yarn_runner_path].
+## Checks whether the path contains a valid yarn runner.
+func _update_yarn_runner():
+	if not is_ready:
+		return
+	
+	if yarn_runner != null:
+		yarn_runner.next_line_prepared.disconnect(Callable(self, "_on_next_line_prepared"))
+		yarn_runner.node_started.disconnect(Callable(self, "_on_node_started"))
+		yarn_runner.options_prepared.disconnect(Callable(self, "_on_options_prepared"))
+		yarn_runner.dialogue_finished.disconnect(Callable(self, "_on_dialogue_finished"))
+		yarn_runner.command_triggered.disconnect(Callable(self, "_on_command_triggered"))
+	
+	yarn_runner = get_node(_yarn_runner_path) as YarnRunner
+	if yarn_runner == null:
+		printerr("YarnGUI: _yarn_runner_path %s does not point to a yarn runner!" % _yarn_runner_path)
+	else:
+		if enable_logs: print("YarnGUI: YarnRunner has been set.")
+		yarn_runner.next_line_prepared.connect(Callable(self, "_on_next_line_prepared"))
+		yarn_runner.node_started.connect(Callable(self, "_on_node_started"))
+		yarn_runner.options_prepared.connect(Callable(self, "_on_options_prepared"))
+		yarn_runner.dialogue_finished.connect(Callable(self, "_on_dialogue_finished"))
+		yarn_runner.command_triggered.connect(Callable(self, "_on_command_triggered"))
+
+## Setter method of [member _text_display_path].
+## Checks whether the path contains a valid display
+func _update_text_display_path():
+	if not is_ready:
+		return
+	
+	if enable_logs: print("updating text display path: %s" % _text_display_path)
+	
+	text_display = get_node(_text_display_path)
+	if text_display == null:
+		printerr("YarnGUI: _text_display_path %s does not point to any node!" % _text_display_path)
+		config.has_unknown_output_type = true
+	else:
+		if text_display is RichTextLabel:
+			config.is_rich_text_label = true
+		elif text_display is Label:
+			pass
+		elif not text_display.has_method("set_text"):
+			printerr("YarnGUI: _text_display_path for the Yarn GUI did not point to a node with a set_text method. No text will be displayed.")
+			config.has_unknown_output_type = true
+
+
+## Setter method of [member _name_plate_display_path].
+## Checks whether the path contains a valid display.
+func _update_name_plate_display_path():
+	if not is_ready:
+		return
+	
+	if enable_logs: print("updating name plate path: %s" % _name_plate_display_path)
+
+	name_plate_display = get_node(_name_plate_display_path)
+	if name_plate_display == null:
+		printerr("YarnGUI: _name_plate_display_path %s does not point to any node!" % _text_display_path)
+	elif !name_plate_display.has_method("set_text"):
+		printerr("YarnGUI: name plate couldn't be set: _name_plate_display_path must point to a node with a set_text method!")
+		name_plate_display = null
+
+
+## Setter method of [member _option_display_paths].
+## Checks whether all paths contain a valid display.
+func _update_option_display_paths():
+	if not is_ready:
+		return
+	
+	if enable_logs: print("updating option display paths: %s" % _name_plate_display_path)
+	
+	for i in range(0, option_displays.size()):
+		option_displays[i].pressed.disconnect(Callable(self, "select_option").bindv([i]))
+	
+	option_displays.clear()
+	
+	if _option_display_paths.size() == 0:
+		printerr("YarnGUI: _option_display_paths for the Yarn GUI hasn't been populated. This will cause faulty behaviour if the dialogue uses any shortcut options or options with displayed text!")
+		return
+
+	for option_display_path in _option_display_paths:
+		option_displays.push_back(get_node(option_display_path))
+		
+		if option_displays.back() == null:
+			printerr("YarnGUI: shortcut option path %s does not point to a text display. This option display will not be displayed." % option_display_path)
+			option_displays.pop_back()
+		elif not option_displays.back().has_method("set_text"):
+			printerr("YarnGUI: shortcut option path %s does not point to a node with a set_text method! This node will not be added to the options array.")
+			option_displays.pop_back()
+		elif not option_displays.back().has_signal("pressed"):
+			printerr("YarnGUI: shortcut option path %s does not point to a node with a 'pressed' signal! This node will not be added to the options array.")
+			option_displays.pop_back()
+		else:
+			option_displays.back().pressed.connect(Callable(self, "select_option").bindv([option_displays.size() - 1]))
+	
+	if enable_logs:
+		print("Yarn GUI's options array has been populated with %d elements.\n
+			Please ensure that there are no shortcut options with more branches than there
+			are elements in the array as this would cause faulty behaviour!" % [option_displays.size()])
+
 
 
 ## A class holding some variables that should be publically visible.

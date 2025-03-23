@@ -230,9 +230,9 @@ class FormatFunctionData:
 ## - language-dependent plurals
 ## - language-dependent ordinal numbers (first, second etc.)
 ## TODO FIXME: slightly suboptimal performance due to missing RegEx pre-compilation.
-func expand_format_functions(input: String, locale: String) -> String:
-	# printerr("locale : %s" % locale)
-	var processed_locale : String = locale.split("_")[0]
+func expand_format_functions(input: String, locale: String, enable_logs: bool) -> String:
+	if enable_logs: print("detected locale: %s" % locale)
+	var processed_locale: String = locale.split("_")[0]
 	var formatted_line: String = input
 
 	# TODO FIXME: probably dont want to compile the regex patterns every time we expand
@@ -256,7 +256,7 @@ func expand_format_functions(input: String, locale: String) -> String:
 				formatted_line = formatted_line.replace(
 					"[" + segment + "]", "<" + function_result.error + ">"
 				)
-				printerr("faulty format function: %s -> %s" % [segment, function_result.error])
+				printerr("ExecutionStates.expand_format_functions: faulty format function: %s -> %s" % [segment, function_result.error])
 				continue
 
 			var pcase : String = ""
@@ -264,20 +264,22 @@ func expand_format_functions(input: String, locale: String) -> String:
 			# printerr("functionName = %s value=[%s] , locale=[%s]" % [function_result.function_name, function_result.variable_value, locale])
 			match function_result.function_name:
 				"select":
-					print("executing selection format function...")
-					print("value: %s" % function_result.variable_value)
-					print("maps:")
-					for key in function_result.value_map.keys():
-						print("\t%s -> %s" % [key, function_result.value_map[key]])
+					if enable_logs:
+						print("executing selection format function...")
+						print("value: %s" % function_result.variable_value)
+						print("maps:")
+						for key in function_result.value_map.keys():
+							print("\t%s -> %s" % [key, function_result.value_map[key]])
 					
-					if function_result.variable_value in function_result.value_map:
+					if function_result.value_map.has(function_result.variable_value):
+						# use specific case
 						formatted_line = formatted_line.replace(
 							"[" + segment + "]", function_result.value_map[function_result.variable_value]
 						)
 					else:
-						printerr("format function - select: value was %s but there was no option given for that value!" % function_result.variable_value)
+						# use "other" case
 						formatted_line = formatted_line.replace(
-							"[" + segment + "]", "<%s had no selection!>" % function_result.variable_value
+							"[" + segment + "]", function_result.value_map["other"]
 						)
 				"plural":
 					pcase = NumberPlurals.get_plural_case_string(
@@ -285,15 +287,16 @@ func expand_format_functions(input: String, locale: String) -> String:
 					)
 
 				"ordinal":
-					#print("ordinal case: %d" % NumberPlurals.get_ordinal_case(
-					#		processed_locale, float(function_result.variable_value)
-					#	))
-					#print("locale: " + processed_locale)
-					#print("function_result: %d" % float(function_result.variable_value))
-					#print("number of parameters: %d" % function_result.value_map.size())
-					#for c in function_result.value_map:
-					#	print(c)
-					#print("segment: " + segment)
+					if enable_logs:
+						print("ordinal case: %d" % NumberPlurals.get_ordinal_case(
+								processed_locale, float(function_result.variable_value)
+							))
+						print("locale: " + processed_locale)
+						print("function_result: %d" % float(function_result.variable_value))
+						print("number of parameters: %d" % function_result.value_map.size())
+						for c in function_result.value_map:
+							print(c)
+						print("segment: " + segment)
 					pcase = NumberPlurals.get_plural_case_string(
 						NumberPlurals.get_ordinal_case(
 							processed_locale, float(function_result.variable_value)

@@ -17,11 +17,18 @@ title: Format_Function_Test
 tags:
 ---
 
-<<set $test_number = 1>>
-Let's test whether format functions work. The test number is set to {$test_number}. #line:33675fd7
+Let's test whether format functions work. Set the test number to... #line:20c94dda 
+-> 1. #line:58cf0f29 
+	<<set $test_number = 1>>
+-> 2. #line:fd8c5cbe
+	<<set $test_number = 2>>
+-> 3. #line:d29cc6ba
+	<<set $test_number = 3>>
+-> 4. #line:a843dbde
+	<<set $test_number = 4>>
 Ordinal numbers - I came in {$test_number}[ordinal {$test_number} one="st" two="nd" few="rd" other="th"] place. #line:b15e688b
 Plurals - I've got [plural {$test_number} one="one apple" other="% apples"]. #line:e5130c58
-Selection - test number is [select {$test_number} 0="zero" 1="one" other="something other than zero or one"]. #line:ea26dbe5
+Selection - test number is [select {$test_number} 1="one" 2="two" other="something other than zero or one"]. #line:b65840ef 
 Format function test done! #line:3209528a
 [[Start]] #line:62345552
 
@@ -56,11 +63,11 @@ title: BBCode_Test
 tags:
 ---
 
-Let's test BBCode. #line:d89abc58 
+Let's test BBCode. #line:d89abc58
 [b]This line is bold.[/b] #line:8b8c8143
 [color=green]This one uses color - a BBCode with an arg![/color] #line:8bf497dc
-And here's one where only [color=red][b]ONE[/b][/color] word is formatted. #line:607dd867 
-BBCode test done! #line:4495fd11 
+And here's one where only [color=red][b]ONE[/b][/color] word is formatted. #line:607dd867
+BBCode test done! #line:4495fd11
 [[Start]] #line:8152b849
 
 ===

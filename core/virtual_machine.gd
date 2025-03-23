@@ -66,7 +66,7 @@ func set_current_node(node_name: String) -> bool:
 		printerr("No node named %s exists in the program" % node_name)
 		return false
 
-	_dialogue.dlog("Running node %s" % node_name)
+	_dialogue.dlog("VirtualMachine.set_current_node", "Running node %s" % node_name)
 
 	_current_node = _program.yarn_nodes[node_name]
 	reset_state()
@@ -177,7 +177,7 @@ func resume() -> bool:
 			execution_state = YarnGlobals.ExecutionState.Stopped
 			reset_state()
 			dialogue_complete_handler.call()
-			_dialogue.dlog("Run Complete")
+			_dialogue.dlog("VirtualMachine.resume", "Run Complete")
 
 	return true
 

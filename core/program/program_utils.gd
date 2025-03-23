@@ -191,14 +191,14 @@ static func _serialize_all_operands(operands: Array[Operand]) -> Array[Dictionar
 ## Imports the program at the given file path.
 ## Returns null if no file exists. Prints errors if the
 ## associated string file isn't found.
-static func _import_program(file_path: String) -> YarnProgram:
+static func _import_program(file_path: String, locale: String) -> YarnProgram:
 	var file : FileAccess # FileAccess used to open various files
 
 	# get file path for the program's string file
 	var strings_path = DEFAULT_STRINGS_FORMAT % [file_path.get_basename(), STRINGS_EXTENSION] # basename: full filepath without extension
 	var localized_strings_path = (
 		"%s-strings-%s.ots"
-		% [file_path.get_basename(), TranslationServer.get_locale()]
+		% [file_path.get_basename(), locale]
 	)
 	
 	# open strings file of this program

@@ -240,7 +240,7 @@ And the following kinds of custom commands are supported:
 - commands with a static/variable number of arguments: `<<Foo5(1, $arg3)>>`
 - asynchronous commands (look the same as other commands in the script)
 
-Custom commands should not have any return value.
+Custom commands should not have any return value - but if they do, it won't break anything; it will just be ignored.
 
 In the code, the functions and commands would look like this:
 ```GDScript

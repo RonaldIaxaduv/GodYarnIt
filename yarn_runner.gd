@@ -30,10 +30,19 @@ const YarnProgram = ProgramUtils.YarnProgram
 @export var _function_library_storage_path: NodePath ## Path to a FunctionLibraryStorage node used for storing subclasses of the library class containing custom functions to use in the yarn dialogues.
 @export var _compiled_yarn_program : CompiledYarnProgram: ## TODO FIXME: String is a path to a PNG(!?) file in the global filesystem.
 	set = set_compiled_program
-
-
-#export(bool) # TODO removed from export to declutter the inspector. Maybe add this somewhere else.
-var is_debug: bool = true ## Set to true to show debug statements.
+@export var locale_to_use: NumberPlurals.SupportedLocale = NumberPlurals.SupportedLocale.EN:
+	get:
+		return locale_to_use
+	set(value):
+		locale_to_use = value
+		_current_locale_string = NumberPlurals.SupportedLocale.find_key(value)
+@export var enable_logs: bool = false:
+	get:
+		return enable_logs
+	set(value):
+		enable_logs = value
+		if _dialogue != null:
+			_dialogue.enable_logs = enable_logs
 
 
 # dialogue flow control
@@ -45,6 +54,7 @@ var _string_table: Dictionary = {}  # localization support to come
 # dialogue
 var _dialogue: YarnDialogue
 var _dialogue_has_started: bool = false
+var _current_locale_string: String = "EN"
 
 
 func _enter_tree() -> void:
@@ -67,7 +77,11 @@ func _ready():
 		# currently shown in the editor
 		pass
 	else:
-		_dialogue = YarnDialogue.new(get_node(_variable_storage_path) as YarnVariableStorage, get_node(_function_library_storage_path) as FunctionLibraryStorage)
+		_dialogue = YarnDialogue.new(
+			get_node(_variable_storage_path) as YarnVariableStorage,
+			get_node(_function_library_storage_path) as FunctionLibraryStorage,
+			enable_logs
+		)
 		_dialogue.get_vm().line_handler = Callable(self, "_handle_line")
 		_dialogue.get_vm().options_handler = Callable(self, "_handle_options")
 		_dialogue.get_vm().command_handler = Callable(self, "_handle_command")
@@ -76,11 +90,11 @@ func _ready():
 		_dialogue.get_vm().node_start_handler = Callable(self, "_handle_node_start")
 		
 		# try to load the compiled program, if it already exists
-		var program: YarnProgram = _compiled_yarn_program._load_compiled_program()
+		var program: YarnProgram = _compiled_yarn_program._load_compiled_program(_current_locale_string)
 		
 		if program == null:
 			# compiled program doesn't exist yet -> compile it now
-			program = _compile_programs(true, true, true)
+			program = _compile_programs(enable_logs, enable_logs) # default: only print tokens and tree when logs are also enabled
 		
 		if program:
 			_string_table = program.yarn_strings
@@ -118,7 +132,7 @@ func choose(option_index: int) -> void:
 func advance_dialogue() -> void:
 	advance_dialogue_triggered.emit()
 	if _dialogue_has_started and not is_waiting:
-		print("runner: advancing dialogue")
+		if enable_logs: print("runner: advancing dialogue")
 		await _dialogue.resume() # executes next instruction(s)
 		dialogue_advanced.emit()
 
@@ -163,11 +177,11 @@ func stop():
 
 ## Compiles the yarn programs stored in [member _compiled_yarn_program],
 ## saves them to the disk and returns the compiled program.
-func _compile_programs(show_tokens: bool, print_tree: bool, print_logs: bool) -> YarnProgram:
+func _compile_programs(show_tokens: bool, print_tree: bool) -> YarnProgram:
 	if _compiled_yarn_program == null:
 		printerr("Unable to compile programs. Missing CompiledYarnProgram resource in YarnRunner.")
 		return null
-	var program: YarnProgram = _compiled_yarn_program._compile_programs(show_tokens, print_tree, print_logs)
+	var program: YarnProgram = _compiled_yarn_program._compile_programs(show_tokens, print_tree, enable_logs)
 	
 	if program != null:
 		_compiled_yarn_program._save_compiled_program(program)
@@ -185,10 +199,9 @@ func _handle_line(line: DisplayedLine) -> int:
 	var text: String = (_string_table.get(line.id) as LineInfo).text
 	text = text.format(line.substitutions)
 	
-	if is_debug:
-		print("formatted line: %s" % text)
+	if enable_logs: print("formatted line: %s" % text)
 
-	next_line_prepared.emit(YarnGlobals.expand_format_functions(text, TranslationServer.get_locale()))
+	next_line_prepared.emit(YarnGlobals.expand_format_functions(text, _current_locale_string, enable_logs))
 
 	return YarnGlobals.HandlerState.PauseExecution
 
@@ -199,8 +212,7 @@ func _handle_line(line: DisplayedLine) -> int:
 ## TODO : add a way to add commands that suspend the run state.
 func _handle_command(command) -> int:
 	# type of command: command.gd
-	if is_debug:
-		print("handling command: <%s>. args: %s" % [command.command_name, command.args])
+	if enable_logs: print("handling command: <%s>. args: %s" % [command.command_name, command.args])
 
 	# If this command is the wait command, we have already verified that it
 	# has a valid argument in the virtual machine, so all that's left do to is
@@ -216,7 +228,7 @@ func _handle_command(command) -> int:
 		wait_timer.wait_time = time
 		#await self.advance_dialogue_triggered
 		wait_timer.start()
-		print("runner is waiting now...")
+		if enable_logs: print("runner is waiting now...")
 	else:
 		command_triggered.emit(command.command_name, command.args)
 
@@ -229,7 +241,7 @@ func _handle_command(command) -> int:
 func _handle_options(dialogue_option_set) -> void:
 	# type of dialogue_option_set: dialogue_option_set.gd
 	
-	if is_debug:
+	if enable_logs:
 		# print all options
 		print("handling %d options:" % dialogue_option_set.options.size())
 		for option in dialogue_option_set.options:
@@ -248,7 +260,8 @@ func _handle_options(dialogue_option_set) -> void:
 				_string_table[dialogue_option_set.options[option_index].displayed_line.id].text.format(
 					dialogue_option_set.options[option_index].displayed_line.substitutions
 				),
-				TranslationServer.get_locale()
+				_current_locale_string,
+				enable_logs
 			)
 		)
 	options_prepared.emit(line_options)
@@ -261,8 +274,7 @@ func _handle_options(dialogue_option_set) -> void:
 ## Handles clean-ups when a dialogue has finished.
 ## Emits [signal dialogue_finished] when done.
 func _handle_dialogue_complete() -> void:
-	if is_debug:
-		print("dialogue finished")
+	if enable_logs: print("dialogue finished")
 	
 	# if display != null:
 	# 	display.dialogue_finished()
@@ -293,6 +305,6 @@ func _handle_node_complete(node: String) -> int:
 
 ## Called by [member wait_timer]'s [signal wait_timer.timeout] signal
 func _on_wait_timeout():
-	print("runner's wait ended.")
+	if enable_logs: print("runner's wait ended.")
 	is_waiting = false
 	#await advance_dialogue() # dialogue has already resumed after _handle_command has finished, so the next line has already been prepared

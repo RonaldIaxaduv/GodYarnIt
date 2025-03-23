@@ -70,7 +70,7 @@ func _compile_programs(show_tokens: bool, print_syntax: bool, print_logs: bool) 
 		return
 	
 	# tag all untagged lines
-	var changed_source_codes: Dictionary = GDYarnUtils.tag_untagged_lines(yarn_source_codes, line_tags)
+	var changed_source_codes: Dictionary = GDYarnUtils.tag_untagged_lines(yarn_source_codes, line_tags, print_logs)
 	for file_path in changed_source_codes:
 		# save any files that have changed due to adding line tags
 		var file: FileAccess = FileAccess.open(file_path, FileAccess.WRITE)
@@ -128,10 +128,10 @@ func _compile_program(
 ## by the [member _compiled_program_name] and [member _compiled_program_directory]
 ## members.
 ## Returns the compiled program if the loading was successful, otherwise null.
-func _load_compiled_program() -> YarnProgram:
+func _load_compiled_program(locale: String) -> YarnProgram:
 	var filepath: String = "%s%s.%s" % [_compiled_program_directory, _compiled_program_name, EXTENSION]
 	if FileAccess.file_exists(filepath):
-		var program: YarnProgram = ProgramUtils._import_program(filepath)
+		var program: YarnProgram = ProgramUtils._import_program(filepath, locale)
 		program.program_name = _compiled_program_name
 		return program
 	else:

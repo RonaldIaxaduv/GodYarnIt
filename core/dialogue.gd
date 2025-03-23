@@ -22,6 +22,7 @@ var execution_complete: bool
 
 var _variable_storage: YarnVariableStorage
 
+var enable_logs: bool
 var _debug_log: Callable ## calls [method dlog]
 var _err_log: Callable ## calls [method elog]
 
@@ -32,7 +33,9 @@ var _vm: VirtualMachine
 var _visited_node_counts: Dictionary = {} ## type [String, int] -> (node name, number of times the node has been visited)
 
 
-func _init(variable_storage: YarnVariableStorage, function_library_storage: FunctionLibraryStorage):
+func _init(variable_storage: YarnVariableStorage, function_library_storage: FunctionLibraryStorage, enable_logs: bool):
+	self.enable_logs = enable_logs
+	
 	_variable_storage = variable_storage
 	if !_variable_storage:
 		printerr("Passed variable storage during dialogue initialisation was null!")
@@ -63,13 +66,13 @@ func _init(variable_storage: YarnVariableStorage, function_library_storage: Func
 				library.import_library(custom_library as YarnLibrary)
 
 ## Prints a message. Used for [member _debug_log].
-func dlog(message: String):
-	print("YARN_DEBUG : %s" % message)
+func dlog(source_method: String, message: String):
+	if enable_logs: print("%s: %s" % [source_method, message])
 
 
 ## Prints an error message. Used for [member _err_log].
-func elog(message: String):
-	printerr("YARN_ERROR : %s" % message)
+func elog(source_method: String, message: String):
+	printerr("%s: %s" % [source_method, message])
 
 
 ## Returns true if the virtual machine hasn't stopped yet.

@@ -23,7 +23,7 @@ static func generate_line_tag(s: int) -> String:
 
 ## Tag all untagged lines in the sources and then return any files that need to be saved to disk.
 ## Will return in the format {file,new_source}.
-static func tag_untagged_lines(sources: Dictionary, tags: Dictionary) -> Dictionary:
+static func tag_untagged_lines(sources: Dictionary, tags: Dictionary, enable_log: bool) -> Dictionary:
 	var changed_files := {}
 
 	for source_key in sources:
@@ -59,13 +59,13 @@ static func tag_untagged_lines(sources: Dictionary, tags: Dictionary) -> Diction
 					while searchingForValidTag:
 						tag = generate_line_tag(tagSeed)
 
-						print("returning tag : %s" % tag)
+						if enable_log: print("returning tag : %s" % tag)
 						if !tags.has(tag):
 							tags[tag] = source_key
 							changed = true
 							file_lines.set(line_number, add_tag_to_line(file_lines[line_number], tag))
 							searchingForValidTag = false
-							print("tag added ")
+							if enable_log: print("tag added ")
 						else:
 							tagSeed = ((tagSeed << 1) * 89) % 65537
 
