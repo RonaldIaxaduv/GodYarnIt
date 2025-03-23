@@ -5,7 +5,7 @@ tags:
 Please select which feature you would like to test.  #line:85634fce // note: Options need to work for this!
 [[wait | Wait_Test]] #line:c07bf561
 [[Custom Functions | Custom_Functions_Test]] #line:7ad573ad
-[[Custom Commands | Custom_Commands_Test]] #line:e3d9d2d3 
+[[Custom Commands | Custom_Commands_Test]] #line:e3d9d2d3
 
 ===
 
@@ -18,7 +18,7 @@ tags:
 
 Let's test whether waiting works. #line:4e0106
 This <<wait 0.5>> is <<wait 1.0>> a <<wait 3.0>> test. #line:404ff419
-<<set $waiting_time = 3.0>>
+<<set $waiting_time = 5.0>>
 And this is <<wait $waiting_time>> another. #line:ed47d5ec
 Waiting test done! #line:7f50913f
 [[Start]] #line:2a380c30
@@ -53,6 +53,7 @@ Here's an automatically formatted {Apple(1, false)}. #line:869c2b46
 Here are even more auto-formatted {Apple(2, false)}. #line:70a29f44
 {Apple(2, true)}. That's right. #line:2d01d01d
 And here's an {Apple_NoArgs()} formatted without args. #line:24b03fd1
+If async functions are working, you'll see a number here -> {GetIntAsync()} #line:defe3a51 
 Custom functions test done! #line:a62f3b36
 [[Start]] #line:157f4660
 
@@ -67,14 +68,16 @@ tags:
 
 <<set $test_number1 = 6>>
 <<set $test_number2 = 10>>
-Let's test whether custom commands work. #line:34ba37f6 
-Next, a random int will be printed. (Command without args) #line:e3dc3fd0 
+Let's test whether custom commands work. #line:34ba37f6
+Next, a random int will be printed. (Command without args) #line:e3dc3fd0
 <<PrintRandomInt()>>
-Now, a random int between 0 and 10 will be printed. (Command with static args) #line:f5546f78 
+Now, a random int between 0 and 10 will be printed. (Command with static args) #line:f5546f78
 <<PrintRandomIntInRange(0, 10)>>
-Finally, let's print a random int between {$test_number1} and {$test_number2}. (Command with variable args) #line:fe20fec5 
+Finally, let's print a random int between {$test_number1} and {$test_number2}. (Command with variable args) #line:fe20fec5
 <<PrintRandomIntInRange($test_number1, $test_number2)>>
-Custom commands test done! #line:645c5d79 
-[[Start]] #line:64007cf7 
+Oh, and if async commands are working, you'll see a number printed next. #line:2f376ac6 
+<<PrintIntAsync()>>
+Custom commands test done! #line:645c5d79
+[[Start]] #line:64007cf7
 
 ===

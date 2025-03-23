@@ -29,16 +29,16 @@ func invoke(params: Array = []):
 	if check_param_count_valid(length):
 		if returns_value:
 			if length > 0:
-				var result = function.callv(params)
+				var result = await function.callv(params)
 				# printerr("function is returning null when it shouldnt, ", result," type of ", typeof(result))
 				return Value.new(result)
 			else:
-				return Value.new(function.call())
+				return Value.new(await function.call())
 		else:
 			if length > 0:
-				function.callv(params)
+				await function.callv(params)
 			else:
-				function.call()
+				await function.call()
 	return null
 
 

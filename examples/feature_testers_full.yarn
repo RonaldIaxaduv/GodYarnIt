@@ -56,8 +56,11 @@ title: BBCode_Test
 tags:
 ---
 
-[intro]This line has a regular intro[/intro] #line:8b8c8143
-[intro offset_x=-20 offset_y=20 duration=0.1]This one uses all the parameters![/intro] #line:8bf497dc
+Let's test BBCode. #line:d89abc58 
+[b]This line is bold.[/b] #line:8b8c8143
+[color=green]This one uses color - a BBCode with an arg![/color] #line:8bf497dc
+And here's one where only [color=red][b]ONE[/b][/color] word is formatted. #line:607dd867 
+BBCode test done! #line:4495fd11 
 [[Start]] #line:8152b849
 
 ===
@@ -85,21 +88,5 @@ Let's test conditions by setting a test number to... #line:f75c4515
 <<endif>>
 Condition testing done! #line:77747af5
 [[Start]] #line:5684a41a
-
-===
-
-
-
-
-title: Wait_Test
-tags:
----
-
-Let's test whether waiting works. #line:4e0106 
-This <<wait 0.5>> is <<wait 1.0>> a <<wait 3.0>> test. #line:404ff419 
-<<set $waiting_time = 3.0>>
-And this is <<wait $waiting_time>> another. #line:ed47d5ec 
-Waiting test done! #line:7f50913f 
-[[Start]] #line:2a380c30 
 
 ===

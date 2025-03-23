@@ -341,13 +341,13 @@ func run_instruction(instruction: Instruction) -> bool:
 			var result
 
 			if actual_param_count == 0:
-				result = function.invoke()
+				result = await function.invoke()
 			else:
 				var params: Array[Value] = []
 				for i in range(actual_param_count):
 					params.push_front(_state.pop_value())
 
-				result = function.invoke(params)
+				result = await function.invoke(params)
 				# print("function[%s] result[%s]" %[functionName, result._to_string()])
 
 			if function.returns_value:

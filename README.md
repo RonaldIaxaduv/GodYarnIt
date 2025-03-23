@@ -42,8 +42,9 @@ Hence, I decided to go the long way and **gave the code a big face-lift and exte
 -   [X] Format Functions `[func {$value} args...]` (select, plural, ordinal)
 -   [X] Pluralisation
 -   [ ] Persistent Variable Storage (currently can only be done manually)
--   [x] Custom Commands `<<CustomCommand(0, $value)>>`
+-   [X] Custom Commands `<<CustomCommand(0, $value)>>`
 -   [X] Function Library Extensions `{CustomFunction(1, $value)}`
+-   [X] async custom functions/commands `{GetIntAsync()}`
 -   [X] Option Links `[[OptionalText | TargetNode]]` (deprecated for Yarn 2.0, might get removed)
 -   [X] Shortcut Options `->`
 -   [ ] Localisation (WIP)
@@ -232,13 +233,16 @@ The following kinds of custom functions are supported:
 - functions with a static number of arguments `{Foo2($arg1, 2)}`
 - functions with a variable number of arguments: `{Foo3()}`, `{Foo3($arg1, $arg2)}`
 - functions without a return value: `{Foo4()}` (these will turn into empty strings)
+- asynchronous functions (look the same as other functions in the script)
 
 And the following kinds of custom commands are supported:
 - commands without arguments: `<<Foo4()>>`
 - commands with a static/variable number of arguments: `<<Foo5(1, $arg3)>>`
+- asynchronous commands (look the same as other commands in the script)
+
 Custom commands should not have any return value.
 
-In the code, they would look like this:
+In the code, the functions and commands would look like this:
 ```GDScript
 extends "res://addons/godyarnit/core/libraries/library.gd"
 
