@@ -33,6 +33,8 @@ func _init():
 func set_dir(value: String) -> void:
 	if DirAccess.dir_exists_absolute(value): # assumes that the path is absolute. if it isn't, try DirAccess.open("").dir_exists(value)
 		_compiled_program_directory = value
+		if not _compiled_program_directory == "res://" and not _compiled_program_directory.ends_with("/"):
+			_compiled_program_directory += "/"
 	else:
 		printerr("Directory does not exist : %s" % value)
 
