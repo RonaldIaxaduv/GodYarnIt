@@ -542,7 +542,7 @@ class LexerState:
 	func expected_tokens_string() -> String:
 		var result = ""
 		for rule in rules:
-			result += "" + YarnGlobals.token_name(rule.token_type)
+			result += "" + YarnGlobals.get_token_name(rule.token_type)
 		return result
 	
 	## Returns true if this state contains a text rule
@@ -573,7 +573,7 @@ class Rule:
 		self.is_text_rule = false
 
 	func _to_string():
-		return "[Rule : %s - %s]" % [YarnGlobals.token_name(token_type), regex]
+		return "[Rule : %s - %s]" % [YarnGlobals.get_token_name(token_type), regex]
 
 
 ## A simple tuple containing a single [int, bool] value pair.
