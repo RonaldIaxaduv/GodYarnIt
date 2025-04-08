@@ -461,7 +461,7 @@ class IfStatement:
 		if parser.error != OK:
 			printerr("IfStatement._init: an error occurred while appending Clauses %s -> aborted." % [get_location_string()])
 			return
-
+		
 		# handle else (if one exists)
 		if parser.next_tokens_are(
 			[
@@ -471,26 +471,18 @@ class IfStatement:
 			]
 		):
 			# read <<else>>
-			parser.try_pop_token_type([YarnGlobals.TokenType.BeginCommand])
-			parser.try_pop_token_type([YarnGlobals.TokenType.ElseToken])
-			parser.try_pop_token_type([YarnGlobals.TokenType.EndCommand])
+			clauses.append(_read_clause(parser, YarnGlobals.TokenType.ElseToken))
 
-			# parse until <<endif>> is hit
-			var else_clause: Clause = Clause.new()
-			var else_statements: Array[Statement] = []
 			while (
-				not parser.next_tokens_are([YarnGlobals.TokenType.BeginCommand, YarnGlobals.TokenType.EndIf])
+				parser.next_token_is([YarnGlobals.TokenType.Whitespace])
 				and parser.error == OK
 			):
-				else_statements.append(Statement.new(self, parser))
-
+				parser.pop_token()
+			
 			if parser.error != OK:
 				printerr("Statement._init: an error occurred while appending else-Statements %s -> aborted." % [get_location_string()])
 				return
-
-			else_clause.statements = else_statements
-			clauses.append(else_clause)
-
+			
 			# consume any dedents -> ignored
 			while parser.next_token_is([YarnGlobals.TokenType.Dedent]):
 				parser.pop_token()
@@ -501,15 +493,14 @@ class IfStatement:
 		parser.try_pop_token_type([YarnGlobals.TokenType.EndCommand])
 
 	func _read_clause(parser: YarnParser, clause_token_type: int) -> Clause:
-		assert(clause_token_type == YarnGlobals.TokenType.IfToken
-			or clause_token_type == YarnGlobals.TokenType.ElseIf)
-
-		# read <<if Expression>> or <<elseif Expression>>
+		# read <<if Expression>> or <<elseif Expression>> or <<else>>
 		parser.try_pop_token_type([YarnGlobals.TokenType.BeginCommand])
 		parser.try_pop_token_type([clause_token_type]) # YarnGlobals.TokenType.If or YarnGlobals.TokenType.ElseIf
 
 		var clause: Clause = Clause.new()
-		clause.expression = ExpressionNode.parse(self, parser)
+		
+		if not clause_token_type == YarnGlobals.TokenType.ElseToken:
+			clause.expression = ExpressionNode.parse(self, parser)
 
 		parser.try_pop_token_type([YarnGlobals.TokenType.EndCommand])
 
@@ -732,7 +723,7 @@ class ShortcutOption:
 		for tag in tags:
 			if tag.begins_with("line:") && option_line.line_id.is_empty():
 				option_line.line_id = tag
-
+		
 		# parse statements in the sub-block of this option (if such a block exists).
 		if parser.next_token_is([YarnGlobals.TokenType.Indent]):
 			# sub-block detected -> create new DialogueSectionNode for that block.
