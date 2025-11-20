@@ -26,12 +26,12 @@ const OPERAND_VALUE: String = "operand_value"
 
 const STRINGS_DELIMITER: String = "\t"
 
-# const YarnGlobals = preload("res://addons/godyarnit/autoloads/execution_states.gd")
-const Operand = preload("res://addons/godyarnit/core/program/operand.gd")
-const YarnProgram = preload("res://addons/godyarnit/core/program/program.gd")
-const Instruction = preload("res://addons/godyarnit/core/program/instruction.gd")
-const CompiledYarnNode = preload("res://addons/godyarnit/core/program/compiled_yarn_node.gd")
-const LineInfo = preload("res://addons/godyarnit/core/program/yarn_string_container.gd")
+# const YarnGlobals = preload("uid://cmp2ukbwmdp12") # execution_states.gd
+const Operand = preload("uid://kkv8oshdm2w2") # operand.gd
+const YarnProgram = preload("uid://n8te6cu7y47j") # program.gd
+const Instruction = preload("uid://ccfk7selnh8tb") # instruction.gd
+const CompiledYarnNode = preload("uid://baf5715y8h1ac") # compiled_yarn_node.gd
+const LineInfo = preload("uid://gjqrbqi5mawn") # yarn_string_container.gd
 
 const STRINGS_EXTENSION := "tsv"
 const DEFAULT_STRINGS_FORMAT = "%s-strings.%s"
@@ -50,7 +50,7 @@ static func export_program(program: YarnProgram, file_path: String) -> void:
 	var file : FileAccess
 
 	var strings_path = DEFAULT_STRINGS_FORMAT % [file_path.get_basename(), STRINGS_EXTENSION] # basename: full filepath without extension
-	var line_infos: Dictionary = program.yarn_strings
+	var line_infos: Dictionary[String, LineInfo] = program.yarn_strings
 	var result: PackedStringArray = _serialize_lines(line_infos)
 	var strings: String = String("\n").join(result)
 
@@ -60,7 +60,7 @@ static func export_program(program: YarnProgram, file_path: String) -> void:
 
 	var otherfile = FileAccess.open(file_path, FileAccess.WRITE)
 	var prog = YarnProgram.new() if program == null else program
-	var serialized_program: Dictionary = _serialize_program(prog)
+	var serialized_program: Dictionary[String, Variant] = _serialize_program(prog) # (id, object)
 	otherfile.store_line(var_to_str(serialized_program))
 	otherfile.close()
 
@@ -71,7 +71,7 @@ static func export_program(program: YarnProgram, file_path: String) -> void:
 ## The first line contains headers of the columns, all
 ## following lines contain yarn_string_container objects
 ## converted to a TSV row.
-static func _serialize_lines(lines: Dictionary) -> PackedStringArray:
+static func _serialize_lines(lines: Dictionary[String, LineInfo]) -> PackedStringArray:
 	# lines has the types [String, LineInfo] -> (ID, string+metadata)
 	var line_texts: PackedStringArray = []
 	var headers := PackedStringArray(["id", "text", "file", "node", "lineNumber", "implicit", "tags"])
@@ -94,8 +94,8 @@ static func _serialize_lines(lines: Dictionary) -> PackedStringArray:
 
 ## Creates a Dictionary object from the given program.
 ## The dictionary is of the form [String, /] -> (id, object)
-static func _serialize_program(program: YarnProgram) -> Dictionary:
-	var result: Dictionary = {} # type [String, /] -> (id, object)
+static func _serialize_program(program: YarnProgram) -> Dictionary[String, Variant]: # (id, object)
+	var result: Dictionary[String, Variant] = {} # (id, object)
 	result[PROGRAM_NAME] = program.program_name
 	# result[PROGRAM_LINE_INFO] = program._line_infos
 	result[PROGRAM_NODES] = _serialize_all_nodes(program.yarn_nodes)
@@ -125,9 +125,9 @@ static func combine_programs(programs: Array[YarnProgram] = []) -> YarnProgram:
 
 ## Creates a Dictionary object from all of the given compiled nodes.
 ## The dictionary is of the form [String, /] -> (id, object)
-static func _serialize_all_nodes(nodes: Dictionary) -> Array[Dictionary]:
-	# type of nodes is [String, CompiledYarnNode] -> (id, compiled yarn node)
-	var result: Array[Dictionary] = []
+static func _serialize_all_nodes(nodes: Dictionary[String, CompiledYarnNode]) -> Array[Dictionary]: # Dictionary type [String, Variant]
+	# values of nodes are (id, compiled yarn node)
+	var result: Array[Dictionary] = [] # Dictionary type [String, Variant]
 	
 	#print("ProgramUtils: serialising yarn nodes...")
 	
@@ -137,7 +137,7 @@ static func _serialize_all_nodes(nodes: Dictionary) -> Array[Dictionary]:
 			#(node as CompiledYarnNode).instructions.size()
 		#])
 		
-		var node_data: Dictionary = {}
+		var node_data: Dictionary[String, Variant] = {}
 		# node_name : String
 		# instructions : Array = []
 		# labels : Dictionary
@@ -159,10 +159,10 @@ static func _serialize_all_nodes(nodes: Dictionary) -> Array[Dictionary]:
 
 ## Creates a dictionary for each of the instruction objects in the
 ## array and accumulates them in an array. Returns that array.
-static func _serialize_all_instructions(instructions: Array[Instruction]) -> Array[Dictionary]:
-	var result: Array[Dictionary] = []
+static func _serialize_all_instructions(instructions: Array[Instruction]) -> Array[Dictionary]: # Dictionary type [String, Variant]
+	var result: Array[Dictionary] = [] # Dictionary type [String, Variant]
 	for instruction in instructions:
-		var instruction_data: Dictionary = {}
+		var instruction_data: Dictionary[String, Variant] = {}
 
 		# var operation : int #bytcode
 		# var operands : Array #Operands
@@ -174,11 +174,11 @@ static func _serialize_all_instructions(instructions: Array[Instruction]) -> Arr
 
 ## Creates a dictionary for each of the operand objects in the
 ## array and accumulates them in an array. Returns that array.
-static func _serialize_all_operands(operands: Array[Operand]) -> Array[Dictionary]:
-	var result: Array[Dictionary] = []
+static func _serialize_all_operands(operands: Array[Operand]) -> Array[Dictionary]: # Dictionary type [String, Variant]
+	var result: Array[Dictionary] = [] # Dictionary type [String, Variant]
 
 	for operand in operands:
-		var operand_data: Dictionary = {}
+		var operand_data: Dictionary[String, Variant] = {}
 
 		operand_data[OPERAND_TYPE] = operand.value_type
 		operand_data[OPERAND_VALUE] = operand.value
@@ -220,8 +220,8 @@ static func _import_program(file_path: String, locale: String) -> YarnProgram:
 	
 	# open program file
 	file = FileAccess.open(file_path, FileAccess.READ)
-	var program_data: Dictionary = str_to_var(file.get_as_text()) as Dictionary
-	var strings_table: Dictionary = _load_line_infos(line_info_data)
+	var program_data: Dictionary[String, Variant] = str_to_var(file.get_as_text()) as Dictionary[String, Variant]
+	var strings_table: Dictionary[String, LineInfo] = _load_line_infos(line_info_data)
 	file.close()
 
 	var program: YarnProgram = _load_program(program_data)
@@ -232,8 +232,8 @@ static func _import_program(file_path: String, locale: String) -> YarnProgram:
 
 ## Deserialises a yarn program's yarn_string dictionary
 ## using the given TSV data.
-static func _load_line_infos(line_info_data: PackedStringArray) -> Dictionary:
-	var result: Dictionary = {}
+static func _load_line_infos(line_info_data: PackedStringArray) -> Dictionary[String, LineInfo]:
+	var result: Dictionary[String, LineInfo] = {}
 	for line in line_info_data:
 		if line.is_empty():
 			continue
@@ -254,7 +254,7 @@ static func _load_line_infos(line_info_data: PackedStringArray) -> Dictionary:
 
 
 ## Deserialises a yarn program using the given data dictionary.
-static func _load_program(program_data: Dictionary) -> YarnProgram:
+static func _load_program(program_data: Dictionary[String, Variant]) -> YarnProgram:
 	var program: YarnProgram = YarnProgram.new()
 
 	program.program_name = program_data[PROGRAM_NAME]
@@ -266,16 +266,16 @@ static func _load_program(program_data: Dictionary) -> YarnProgram:
 
 ## Deserialises a yarn program's yarn_nodes dictionary
 ## using the given array of compiled nodes.
-static func _load_nodes(serialised_nodes_data: Array[Dictionary]) -> Dictionary:
-	var result: Dictionary = {}
-	for node_data in serialised_nodes_data:
+static func _load_nodes(serialised_nodes_data: Array[Dictionary]) -> Dictionary[String, CompiledYarnNode]:
+	var result: Dictionary[String, CompiledYarnNode] = {}
+	for node_data: Dictionary[String, Variant] in serialised_nodes_data:
 		var compiled_yarn_node: CompiledYarnNode = _load_node(node_data)
 		result[compiled_yarn_node.node_name] = compiled_yarn_node
 	return result
 
 
 ## Deserialises a serialised yarn node.
-static func _load_node(node_data: Dictionary) -> CompiledYarnNode:
+static func _load_node(node_data: Dictionary[String, Variant]) -> CompiledYarnNode:
 	var compiled_yarn_node: CompiledYarnNode = CompiledYarnNode.new()
 
 	compiled_yarn_node.node_name = node_data[NODE_NAME]
@@ -291,14 +291,14 @@ static func _load_node(node_data: Dictionary) -> CompiledYarnNode:
 static func _load_instructions(instructions_data: Array[Dictionary]) -> Array[Instruction]:
 	var result: Array[Instruction] = []
 
-	for instruction_data in instructions_data:
+	for instruction_data: Dictionary[String, Variant] in instructions_data:
 		result.append(_load_instruction(instruction_data))
 
 	return result
 
 
 ## Deserialises a compiled instruction from a dictionary.
-static func _load_instruction(instruction_data: Dictionary) -> Instruction:
+static func _load_instruction(instruction_data: Dictionary[String, Variant]) -> Instruction:
 	var operation: int = instruction_data[INSTRUCTION_OP]
 	var operands: Array[Operand] = _load_operands(instruction_data[INSTRUCTION_OPERANDS])
 
@@ -313,15 +313,15 @@ static func _load_instruction(instruction_data: Dictionary) -> Instruction:
 ## Deserialises an instruction's operands array from a data array.
 static func _load_operands(operands_data: Array[Dictionary]) -> Array[Operand]:
 	var result: Array[Operand] = []
-	for operand_data in operands_data:
+	for operand_data: Dictionary[String, Variant] in operands_data:
 		result.append(_load_operand(operand_data))
 
 	return result
 
 
 ## Deserialises an instruction's operand.
-static func _load_operand(operand_data: Dictionary) -> Operand:
-	var value = operand_data[OPERAND_VALUE]
+static func _load_operand(operand_data: Dictionary[String, Variant]) -> Operand:
+	var value: Variant = operand_data[OPERAND_VALUE]
 
 	var value_type: int = operand_data[OPERAND_TYPE]
 	match value_type:

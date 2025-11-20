@@ -5,7 +5,7 @@
 ## note: has been renamed from option.gd to differentiate it from shortcut options and dialogue options
 extends Object
 
-const DisplayedLine = preload("res://addons/godyarnit/core/dialogue/displayed_line.gd")
+const DisplayedLine = preload("uid://cm6y42l5hrabu") # displayed_line.gd
 
 var displayed_line: DisplayedLine
 var id: int

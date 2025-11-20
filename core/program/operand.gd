@@ -10,7 +10,7 @@ var value ## arbitrary value
 var value_type: int ## item of ValueType; indicates the type of value
 
 
-func _init(value):
+func _init(value: Variant):
 	if typeof(value) == TYPE_OBJECT && value.get_script() == self.get_script():
 		# value is another operand object
 		self.set_value(value.value)

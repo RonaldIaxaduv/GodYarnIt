@@ -3,9 +3,9 @@
 ## A subclass of this exists with the core/libraries/standard.gd script.
 extends Object
 
-const FunctionInfo = preload("res://addons/godyarnit/core/libraries/function_info.gd")
+const FunctionInfo = preload("uid://3sk28pu7q75h") # function_info.gd
 
-var functions: Dictionary = {}  ## type [String, FunctionInfo]. 
+var functions: Dictionary[String, FunctionInfo] = {} # (function name, function object)
 
 
 func get_function(name: String) -> FunctionInfo:

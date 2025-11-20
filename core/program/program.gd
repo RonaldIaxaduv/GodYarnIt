@@ -4,12 +4,13 @@
 extends Resource
 
 
-const YarnStringContainer = preload("res://addons/godyarnit/core/program/yarn_string_container.gd")
+const YarnStringContainer = preload("uid://gjqrbqi5mawn") # yarn_string_container.gd
+const CompiledYarnNode = preload("uid://baf5715y8h1ac") # compiled_yarn_node.gd
 
 
 var program_name: String
-var yarn_strings: Dictionary = {} # type [String, yarn_string_container.gd] -> (id: string+metadata), copied over from compiler._registered_string_table 
-var yarn_nodes: Dictionary = {} # type [String, compiled_yarn_node.gd] -> (node name, compiled yarn node)
+var yarn_strings: Dictionary[String, YarnStringContainer] = {} # (id: string+metadata, strings), copied over from compiler._registered_string_table 
+var yarn_nodes: Dictionary[String, CompiledYarnNode] = {} # (node name, compiled yarn node)
 
 ## an array of line Info data that gets exported to file
 ## stripped of the text information that is saved to another file

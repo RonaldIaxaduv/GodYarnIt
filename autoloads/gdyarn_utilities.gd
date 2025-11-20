@@ -23,11 +23,11 @@ static func generate_line_tag(s: int) -> String:
 
 ## Tag all untagged lines in the sources and then return any files that need to be saved to disk.
 ## Will return in the format {file,new_source}.
-static func tag_untagged_lines(sources: Dictionary, tags: Dictionary, enable_log: bool) -> Dictionary:
-	var changed_files := {}
+static func tag_untagged_lines(sources: Dictionary[String, String], tags: Dictionary[String, String], enable_log: bool) -> Dictionary[String, String]:
+	var changed_files: Dictionary[String, String] = {}
 
-	for source_key in sources:
-		var source = sources[source_key]
+	for source_key: String in sources:
+		var source: String = sources[source_key]
 		var line_number: int = 0
 		var changed: bool = false
 
@@ -82,11 +82,11 @@ static func tag_untagged_lines(sources: Dictionary, tags: Dictionary, enable_log
 ## Gets all the line tags from the passed sources dictionary. Returned as a dictionary of the form {tag : source_key}.
 ## Entries in the dictionary are in the format {file : source}.
 ## Returns dictionary with an {error : message} key value pair if there is a conflict.
-static func get_tags_from_sources(sources: Dictionary) -> Dictionary:
-	var lineTags: Dictionary = {}
+static func get_tags_from_sources(sources: Dictionary[String, String]) -> Dictionary[String, String]:
+	var lineTags: Dictionary[String, String] = {} # (tag, source key)
 
-	for source_key in sources:
-		var source = sources[source_key]
+	for source_key: String in sources:
+		var source: String = sources[source_key]
 		var line_number: int = 0
 
 		var file_lines: PackedStringArray = source.split("\n", true)
@@ -122,9 +122,9 @@ static func get_tags_from_sources(sources: Dictionary) -> Dictionary:
 
 
 ## Gets all the tags in the node body in an array.
-static func get_all_tags(sourceLines: Array) -> Array[String]:
+static func get_all_tags(sourceLines: Array[String]) -> Array[String]:
 	var results := []
-	for line in sourceLines:
+	for line: String in sourceLines:
 		var lineTag : String = get_line_tag(line)
 		if !lineTag.is_empty():
 			results.append(lineTag)

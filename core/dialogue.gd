@@ -11,11 +11,12 @@ extends Node
 
 const DEFAULT_START: String = "Start"
 
-# const StandardLibrary = preload("res://addons/godyarnit/core/libraries/standard.gd")
-const YarnProgram = preload("res://addons/godyarnit/core/program/program.gd")
-const VirtualMachine = preload("res://addons/godyarnit/core/virtual_machine.gd")
-const YarnLibrary = preload("res://addons/godyarnit/core/libraries/library.gd")
-const Value = preload("res://addons/godyarnit/core/value.gd")
+# const StandardLibrary = preload("uid://cx8heifc6uepj") # standard.gd
+const YarnProgram = preload("uid://n8te6cu7y47j") # program.gd
+const VirtualMachine = preload("uid://cgix2ikmh3lkm") # virtual_machine.gd
+const YarnLibrary = preload("uid://xldo1yiurv4o") # library.gd
+const Value = preload("uid://dtwoppax6efli") # value.gd
+const YarnStringContainer = preload("uid://gjqrbqi5mawn") # yarn_string_container.gd
 
 var library: YarnLibrary
 var execution_complete: bool
@@ -30,7 +31,7 @@ var _program: YarnProgram
 
 var _vm: VirtualMachine
 
-var _visited_node_counts: Dictionary = {} ## type [String, int] -> (node name, number of times the node has been visited)
+var _visited_node_counts: Dictionary[String, int] = {} ## (node name, number of times the node has been visited)
 
 
 func _init(variable_storage: YarnVariableStorage, function_library_storage: FunctionLibraryStorage, enable_logs: bool):
@@ -136,7 +137,7 @@ func get_node_id(node_name: String) -> String:
 
 
 ## Gets the dictionary of stored string of the current program.
-func get_program_strings() -> Dictionary:
+func get_program_strings() -> Dictionary[String, YarnStringContainer]:
 	return _program.yarn_strings
 
 

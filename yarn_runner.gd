@@ -18,18 +18,16 @@ signal node_started(node_name: String) ## A signal emitted when preparations aft
 signal node_complete(node_name: String) ## A signal emitted when clean-up procedures after the completion of a node have been finished.
 
 
-const LineInfo = preload("res://addons/godyarnit/core/program/yarn_string_container.gd")
-const DisplayedLine = preload("res://addons/godyarnit/core/dialogue/displayed_line.gd")
-const YarnDialogue = preload("res://addons/godyarnit/core/dialogue.gd")
-const ProgramUtils = preload("res://addons/godyarnit/core/program/program_utils.gd")
+const LineInfo = preload("uid://gjqrbqi5mawn") # yarn_string_container.gd
+const DisplayedLine = preload("uid://cm6y42l5hrabu") # displayed_line.gd
+const YarnDialogue = preload("uid://drr5ppbp71mew") # dialogue.gd
+const ProgramUtils = preload("uid://dca5ejpptir7m") # program_utils.gd
 const YarnProgram = ProgramUtils.YarnProgram
 
 @export var _start_node_title : String = "Start" ## Title of the node which should be executed first in the program.
 @export var _should_auto_start : bool = false ## Value indicating whether the yarn dialogue should start immediately after the YarnRunner has entered the scene tree (end of [method _ready]).
 @export var _variable_storage_path : NodePath ## Path to a YarnVariableStorage node used for storing various values during the execution of the dialogues.
 @export var _function_library_storage_path: NodePath ## Path to a FunctionLibraryStorage node used for storing subclasses of the library class containing custom functions to use in the yarn dialogues.
-@export var _compiled_yarn_program : CompiledYarnProgram: ## TODO FIXME: String is a path to a PNG(!?) file in the global filesystem.
-	set = set_compiled_program
 @export var locale_to_use: NumberPlurals.SupportedLocale = NumberPlurals.SupportedLocale.EN:
 	get:
 		return locale_to_use
@@ -44,12 +42,18 @@ const YarnProgram = ProgramUtils.YarnProgram
 		if _dialogue != null:
 			_dialogue.enable_logs = enable_logs
 
+@export_group("Compilation")
+@export_tool_button("COMPILE!") var compile_action = Callable(self, "_compile_button_pressed")
+@export var _print_tokens: bool = false
+@export var _print_tree: bool = false
+@export var _compiled_yarn_program : CompiledYarnProgram: ## TODO FIXME: String is a path to a PNG(!?) file in the global filesystem.
+	set = set_compiled_program
 
 # dialogue flow control
 var next_line: String = "" # extra line will be empty when there is no next line
 var is_waiting: bool = false
 var wait_timer: Timer
-var _string_table: Dictionary = {}  # localization support to come
+var _string_table: Dictionary[String, LineInfo] = {}  # TODO: localization support to come
 
 # dialogue
 var _dialogue: YarnDialogue
@@ -174,6 +178,9 @@ func stop():
 		_dialogue.stop()
 		dialogue_finished.emit()
 
+
+func _compile_button_pressed() -> void:
+	_compile_programs(_print_tokens, _print_tree)
 
 ## Compiles the yarn programs stored in [member _compiled_yarn_program],
 ## saves them to the disk and returns the compiled program.

@@ -4,7 +4,7 @@
 ## All common unary and binary operators on values are provided
 ## through further methods.
 
-const Value = preload("res://addons/godyarnit/core/value.gd")
+const Value = preload("uid://dtwoppax6efli") # value.gd
 
 
 const NULL_STRING: String = "null"
@@ -63,7 +63,13 @@ func as_bool() -> bool:
 
 ## Returns the value of this class instance converted to a string.
 func as_string() -> String:
-	return "%s" % get_value()
+	if type == YarnGlobals.ValueType.Number:
+		if number == int(number):
+			return "%d" % number # avoids displaying unneeded decimal places
+		else:
+			return "%f" % number
+	else:
+		return "%s" % get_value()
 
 
 ## Returns the value of this class instance converted to a float.

@@ -167,7 +167,7 @@ enum StatementTypes {
 ## Examples: Number, String, Boolean,...
 enum ValueType { Number, Str, Boolean, Variable, Nullean }  # null lel
 
-const GDYarnUtils := preload("res://addons/godyarnit/autoloads/gdyarn_utilities.gd")
+const GDYarnUtils := preload("uid://bppl7u06dcu6c") # gdyarn_utilities.gd
 
 
 ## Outputs the name of the ValueType item with the given value.
@@ -213,7 +213,7 @@ func get_token_name(type: int) -> String:
 class FormatFunctionData:
 	var function_name: String = ""
 	var variable_value: String = ""
-	var value_map: Dictionary = {} # type: [String, String] -> (value, replacement value)
+	var value_map: Dictionary[String, String] = {} # (value, replacement value)
 	var error: String = ""
 
 	func _init():

@@ -4,7 +4,7 @@
 ## These instructions are used to execute compiled yarn nodes.
 extends Object
 
-const Operand = preload("res://addons/godyarnit/core/program/operand.gd")
+const Operand = preload("uid://kkv8oshdm2w2") # operand.gd
 
 var operation: int  # bytecode given through YarnGlobals.ByteCode denoting an operation
 var operands: Array[Operand]  # contains operands given through operand.gd

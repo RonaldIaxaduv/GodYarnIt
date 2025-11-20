@@ -8,9 +8,9 @@ class_name CompiledYarnProgram
 extends Resource
 
 
-const ProgramUtils = preload("res://addons/godyarnit/core/program/program_utils.gd")
-const GDYarnUtils = preload("res://addons/godyarnit/autoloads/gdyarn_utilities.gd")
-const YarnCompiler = preload("res://addons/godyarnit/core/compiler/compiler.gd")
+const ProgramUtils = preload("uid://dca5ejpptir7m") # program_utils.gd
+const GDYarnUtils = preload("uid://bppl7u06dcu6c") # gdyarn_utilities.gd
+const YarnCompiler = preload("uid://bjgc3ly1hk7lm") # compiler.gd
 
 const YarnProgram = ProgramUtils.YarnProgram
 const EXTENSION := "cyarn"
@@ -49,7 +49,7 @@ func set_program_name(value: String) -> void:
 ## Also ensures that all lines in the programs are tagged.
 func _compile_programs(show_tokens: bool, print_syntax: bool, print_logs: bool) -> YarnProgram:
 	var programs: Array[YarnProgram] = []
-	var yarn_source_codes: Dictionary = {} # [String, String] -> (yarn program file path, yarn program file as text)
+	var yarn_source_codes: Dictionary[String, String] = {} # (yarn program file path, yarn program file as text)
 
 	# load all yarn program source files
 	for yarn_source_code_path in _yarn_source_code_paths:
@@ -65,21 +65,21 @@ func _compile_programs(show_tokens: bool, print_syntax: bool, print_logs: bool) 
 		f.close()
 	
 	# gather all line tags currently in the files
-	var line_tags: Dictionary = GDYarnUtils.get_tags_from_sources(yarn_source_codes)
+	var line_tags: Dictionary[String, String] = GDYarnUtils.get_tags_from_sources(yarn_source_codes)
 	
 	if line_tags.has("error"):
 		printerr("CompiledYarnProgram._compile_programs: found a conflict of line tags that needs to be resolved: %s" % line_tags["error"])
 		return
 	
 	# tag all untagged lines
-	var changed_source_codes: Dictionary = GDYarnUtils.tag_untagged_lines(yarn_source_codes, line_tags, print_logs)
-	for file_path in changed_source_codes:
+	var changed_source_codes: Dictionary[String, String] = GDYarnUtils.tag_untagged_lines(yarn_source_codes, line_tags, print_logs)
+	for file_path: String in changed_source_codes:
 		# save any files that have changed due to adding line tags
 		var file: FileAccess = FileAccess.open(file_path, FileAccess.WRITE)
 		file.store_string(changed_source_codes[file_path])
 		file.close()
 	
-	for source_code_path in yarn_source_codes.keys():
+	for source_code_path: String in yarn_source_codes.keys():
 		var source_code: String = yarn_source_codes[source_code_path] # contains a compiled yarn program converted to a string
 		if source_code.is_empty():
 			continue

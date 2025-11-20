@@ -54,7 +54,7 @@ signal gui_hidden ## A signal emitted when `hide_gui` has been called.
 @export var restart_dialogue_after_finished: bool = false
 
 
-const YarnRunner = preload("res://addons/godyarnit/yarn_runner.gd")
+const YarnRunner = preload("uid://dqlgme0v81h3t") # yarn_runner.gd
 
 const NAME_TAG_PATTERN: String = "^(?:.*(?=:))" ## regex pattern looking for any text followed by a colon (:) -> marks the name tag of the speaker
 var name_plate_regex: RegEx

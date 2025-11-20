@@ -10,14 +10,14 @@ class_name YarnVariableStorage
 extends Node
 
 
-const Value = preload("res://addons/godyarnit/core/value.gd")
+const Value = preload("uid://dtwoppax6efli") # value.gd
 
 
 # emitted when a call to set_value has been made
 # will also pass in the name of the set value
 signal value_set(val_name: String)
 
-var variables: Dictionary = {}: ## type [String, Value] -> (object ID, object)
+var variables: Dictionary[String, Value] = {}: ## (object ID, object value)
 	set = _set_vars
 
 
@@ -85,11 +85,11 @@ func _get_value_(name: String) -> Value:
 
 
 ## NOT SUPPORTED
-func _get_vars() -> Dictionary:
+func _get_vars() -> Dictionary[String, Value]:
 	printerr("Do not access variables in variable store directly - Use `get_value` function")
 	return variables
 
 
 ## NOT SUPPORTED
-func _set_vars(value):
+func _set_vars(value: Dictionary[String, Value]):
 	printerr("Do not access variables in variable store directly - Use `set_value` function")

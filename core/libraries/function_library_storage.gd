@@ -3,7 +3,7 @@ class_name FunctionLibraryStorage
 extends Node
 
 
-const FunctionLibrary = preload("res://addons/godyarnit/core/libraries/library.gd")
+const FunctionLibrary = preload("uid://xldo1yiurv4o") # library.gd
 
 
 @export var libraries_to_use: Array[GDScript] = []

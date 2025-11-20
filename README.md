@@ -69,9 +69,9 @@ Hence, I decided to go the long way and **gave the code a big face-lift and exte
 ## Install from GitHub
 
 Go to the folder where you want to download this project to and clone it using your preferred method.
-The files expect the following file path within your project: `res://addons/godyarnit/`. If you'd like to drop them somewhere else, press Ctrl+Shift+R when you're in the Godot editor. This will open up a replacement prompt. Enter `res://addons/godyarnit/` as your search term and the relative path to the new directory as the replacement term (you can get that path by right-clicking the directory in the editor and selecting `Copy Path`). Select the folder into which you've dropped the files as your search region in the prompt. When you hit `Replace`, all the file paths will be adjusted to your new location. You'll probably have to reload the editor, but afterwards you should be good!
+GodYarnIt's internal file references use the UID system, so it shouldn't matter into which directory of your own project you drop it. The .uid files required for this are provided in this repo. In the unlikely case that there exists a duplicate UID between your project and GodYarnIt, the files referened are always noted as a comment next to their UID in the code so that you can manually eliminate the duplication, if needed.
 
-For more information regarding this process checkout the official [Godot Documentation](https://docs.godotengine.org/en/stable/tutorials/plugins/editor/installing_plugins.html) regarding plugin installation.
+For more information regarding the general plugin installation process, check out the official [Godot Documentation](https://docs.godotengine.org/en/stable/tutorials/plugins/editor/installing_plugins.html).
 
 
 <a id="org7865e93"></a>

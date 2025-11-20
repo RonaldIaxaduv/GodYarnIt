@@ -4,7 +4,7 @@
 extends "res://addons/godyarnit/core/libraries/library.gd"
 
 
-const Value = preload("res://addons/godyarnit/core/value.gd")
+const Value = preload("uid://dtwoppax6efli") # value.gd
 
 
 func _init():

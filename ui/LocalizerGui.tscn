@@ -1,11 +1,11 @@
 [gd_scene load_steps=2 format=3 uid="uid://damqkj3inubee"]
 
-[ext_resource type="Script" path="res://addons/godyarnit/ui/LocalizerGui.gd" id="1_32bg8"]
+[ext_resource type="Script" uid="uid://e4a3a6dqo2bb" path="res://addons/godyarnit/ui/LocalizerGui.gd" id="1_32bg8"]
 
 [node name="LocalizerGui" type="AcceptDialog"]
 title = "GodYarnIt Localiser GUI"
 position = Vector2i(0, 36)
-size = Vector2i(254, 161)
+size = Vector2i(255, 161)
 visible = true
 script = ExtResource("1_32bg8")
 LocalizationList = NodePath("Vmain/BottomHalf/LocalizationOptions/LocalizationList")
@@ -14,7 +14,7 @@ LocaleAbbrevLabel = NodePath("Vmain/BottomHalf/LocalizationOptions/LocaleAbbrevL
 [node name="Vmain" type="VBoxContainer" parent="."]
 offset_left = 8.0
 offset_top = 8.0
-offset_right = 246.0
+offset_right = 247.0
 offset_bottom = 112.0
 size_flags_horizontal = 3
 size_flags_vertical = 3

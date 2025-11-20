@@ -3,8 +3,8 @@
 ## Sets up higher-level Yarn Script objects, e.g. for If blocks, Options etc.
 class_name YarnParser # gave this a class name for better typing in the subclasses of this script
 
-# const YarnGlobals = preload("res://addons/godyarnit/autoloads/execution_states.gd")
-const Lexer = preload("res://addons/godyarnit/core/compiler/lexer.gd")
+# const YarnGlobals = preload("uid://cmp2ukbwmdp12") # execution_states.gd
+const Lexer = preload("uid://chwwhyiwk8nxm") # lexer.gd
 
 
 var error = OK
@@ -1229,7 +1229,7 @@ class ExpressionNode:
 
 	# Remove this constant if it causes any trouble.
 	# It's only used for stronger typing to ensure there are no typos.
-	const Lexer = preload("res://addons/godyarnit/core/compiler/lexer.gd")
+	const Lexer = preload("uid://chwwhyiwk8nxm") # lexer.gd
 
 
 	## Constructs an ExpressionNode from already existing arguments (without parsing).
@@ -1561,8 +1561,8 @@ class ExpressionNode:
 class ValueNode:
 	extends ParseNode
 
-	const Value = preload("res://addons/godyarnit/core/value.gd") # class representing a value and operations on it
-	const Lexer = preload("res://addons/godyarnit/core/compiler/lexer.gd")
+	const Value = preload("uid://dtwoppax6efli") # value.gd - class representing a value and operations on it
+	const Lexer = preload("uid://chwwhyiwk8nxm") # lexer.gd
 
 	var value: Value
 
@@ -1728,4 +1728,3 @@ class OperatorInfo:
 		self.associativity = associativity
 		self.precedence_score = precedence_score
 		self.num_arguments = num_arguments
-

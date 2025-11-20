@@ -8,15 +8,15 @@
 ## the stack of their respective instructions among a few other things) and a
 ## dictionary of stored strings (mainly the displayed text).
 
-# const YarnGlobals = preload("res://addons/godyarnit/autoloads/execution_states.gd")
+# const YarnGlobals = preload("uid://cmp2ukbwmdp12") # execution_states.gd
 
-const Parser = preload("res://addons/godyarnit/core/compiler/parser.gd")
-const Lexer = preload("res://addons/godyarnit/core/compiler/lexer.gd")
-const LineInfo = preload("res://addons/godyarnit/core/program/yarn_string_container.gd")
-const CompiledYarnNode = preload("res://addons/godyarnit/core/program/compiled_yarn_node.gd")
-const Instruction = preload("res://addons/godyarnit/core/program/instruction.gd")
-const YarnProgram = preload("res://addons/godyarnit/core/program/program.gd")
-const Operand = preload("res://addons/godyarnit/core/program/operand.gd")
+const Parser = preload("uid://ckub56wnl2ic3") # parser.gd
+const Lexer = preload("uid://chwwhyiwk8nxm") # lexer.gd
+const LineInfo = preload("uid://gjqrbqi5mawn") # yarn_string_container.gd
+const CompiledYarnNode = preload("uid://baf5715y8h1ac") # compiled_yarn_node.gd
+const Instruction = preload("uid://ccfk7selnh8tb") # instruction.gd
+const YarnProgram = preload("uid://n8te6cu7y47j") # program.gd
+const Operand = preload("uid://kkv8oshdm2w2") # operand.gd
 
 # patterns
 const INVALID_TITLE_PATTERN = "[\\[<>\\]{}\\|:\\s#\\$]"
@@ -43,10 +43,10 @@ var _source_code_path: String
 var _contains_implicit_string_tags: bool
 var _label_count: int = 0
 
-var _registered_string_table: Dictionary = {} # type [string, LineInfo] -> (id: string+metadata) -> contains strings required for running the yarn program, e.g. all the displayed text
+var _registered_string_table: Dictionary[String, LineInfo] = {} # (id: string+metadata, line) -> contains strings required for running the yarn program, e.g. all the displayed text
 var _implicit_string_count: int = 0 # number of stored strings with an ID generated at compilation time
 
-var _tokens: Dictionary = {} # type [int, YarnGlobals.TokenType]
+var _tokens: Dictionary[int, YarnGlobals.TokenType] = {}
 
 
 ## Takes a yarn source code string and
@@ -193,7 +193,7 @@ func compile_string(
 
 ## Copies the strings stored in the registered string table
 ## to the target dictionary (in a yarn program).
-static func copy_registered_strings(target: Dictionary, patch: Dictionary):
+static func copy_registered_strings(target: Dictionary[String, LineInfo], patch: Dictionary[String, LineInfo]):
 	for key in patch.keys():
 		target[key] = patch[key]
 

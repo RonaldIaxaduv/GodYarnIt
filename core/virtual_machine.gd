@@ -11,16 +11,16 @@ signal resumed
 # var YarnGlobals = load("res://addons/godyarnit/autoloads/execution_states.gd")
 
 const EXECUTION_COMPLETE: String = "execution_complete_command"
-const YarnDialogue = preload("res://addons/godyarnit/core/dialogue.gd")
-const FunctionInfo = preload("res://addons/godyarnit/core/libraries/function_info.gd")
-const Value = preload("res://addons/godyarnit/core/value.gd")
-const YarnProgram = preload("res://addons/godyarnit/core/program/program.gd")
-const CompiledYarnNode = preload("res://addons/godyarnit/core/program/compiled_yarn_node.gd")
-const Instruction = preload("res://addons/godyarnit/core/program/instruction.gd")
-const DisplayedLine = preload("res://addons/godyarnit/core/dialogue/displayed_line.gd")
-const Command = preload("res://addons/godyarnit/core/dialogue/command.gd")
-const DialogueOption = preload("res://addons/godyarnit/core/dialogue/dialogue_option.gd")
-const OptionSet = preload("res://addons/godyarnit/core/dialogue/dialogue_option_set.gd")
+const YarnDialogue = preload("uid://drr5ppbp71mew") # dialogue.gd
+const FunctionInfo = preload("uid://3sk28pu7q75h") # function_info.gd
+const Value = preload("uid://dtwoppax6efli") # value.gd
+const YarnProgram = preload("uid://n8te6cu7y47j") # program.gd
+const CompiledYarnNode = preload("uid://baf5715y8h1ac") # compiled_yarn_node.gd
+const Instruction = preload("uid://ccfk7selnh8tb") # instruction.gd
+const DisplayedLine = preload("uid://cm6y42l5hrabu") # displayed_line.gd
+const Command = preload("uid://bo2qq6nsa036k") # command.gd
+const DialogueOption = preload("uid://6id6cwmdns5a") # dialogue_option.gd
+const OptionSet = preload("uid://bl6813f4t6evw") # dialogue_option_set.gd
 
 var NULL_VALUE: Value = Value.new(null)
 

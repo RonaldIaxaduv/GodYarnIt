@@ -22,7 +22,7 @@ const WHITESPACE: String = "\\s*"
 
 var error = OK
 
-var _states: Dictionary = {}
+var _states: Dictionary[String, LexerState] = {} # (BASE/COMMAND/..., LexerState)
 var _default_state: LexerState
 var _current_state: LexerState
 
@@ -40,7 +40,7 @@ func _init():
 ##       Possible solution is to add more transitions
 func create_states() -> void:
 	# create a dictionary containing RegEx patterns for all supported tokens
-	var patterns: Dictionary = {}
+	var patterns: Dictionary[YarnGlobals.TokenType, String] = {} # (TokenType, RegEx pattern)
 	patterns[YarnGlobals.TokenType.Text] = ".*"
 
 	patterns[YarnGlobals.TokenType.Number] = "\\-?[0-9]+(\\.[0-9]+)?"
@@ -505,7 +505,7 @@ class Token:
 ## Contains methods for adding transitions and transition rules (using RegEx patterns) to other states.
 class LexerState:
 	var state_name: String
-	var patterns: Dictionary ## RegEx patterns for all supported tokens
+	var patterns: Dictionary[YarnGlobals.TokenType, String] ## RegEx patterns for all supported tokens
 	var rules: Array[Rule] = []
 	var track_indent: bool = false
 

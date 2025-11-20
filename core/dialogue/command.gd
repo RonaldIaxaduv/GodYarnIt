@@ -4,7 +4,7 @@
 extends Object
 
 
-const Value = preload("res://addons/godyarnit/core/value.gd")
+const Value = preload("uid://dtwoppax6efli") # value.gd
 
 
 var command_name: String
