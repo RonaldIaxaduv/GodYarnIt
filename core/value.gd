@@ -93,7 +93,7 @@ func as_number() -> float:
 func set_value(value):
 	if value == null || (typeof(value) == TYPE_STRING && value == NANI):
 		type = YarnGlobals.ValueType.Nullean
-		# printerr("NULLEAN VALUE ",value)
+		#printerr("NULLEAN VALUE ",value)
 		return
 
 	match typeof(value):
@@ -101,15 +101,15 @@ func set_value(value):
 			type = YarnGlobals.ValueType.Number
 			number = value
 
-			# printerr("NUMBER VALUE ",value)
+			#printerr("NUMBER VALUE ",value)
 		TYPE_STRING:
 			type = YarnGlobals.ValueType.Str
 			string = value
-			# printerr("String VALUE ",value)
+			#printerr("String VALUE ",value)
 		TYPE_BOOL:
 			type = YarnGlobals.ValueType.Boolean
 			boolean = value
-			# printerr("bool VALUE ",value)
+			#printerr("bool VALUE ",value)
 
 
 # operations >>

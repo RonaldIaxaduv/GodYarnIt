@@ -12,7 +12,7 @@ func get_function(name: String) -> FunctionInfo:
 	if functions.has(name):
 		return functions[name]
 	else:
-		printerr("Missing function: %s" % name)
+		printerr("Library.get_function: function '%s' is not available. You might be missing a reference in the FunctionLibraryStorage." % name)
 		return null
 
 

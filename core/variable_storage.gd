@@ -87,9 +87,11 @@ func _get_value_(name: String) -> Value:
 ## NOT SUPPORTED
 func _get_vars() -> Dictionary[String, Value]:
 	printerr("Do not access variables in variable store directly - Use `get_value` function")
+	print_stack()
 	return variables
 
 
 ## NOT SUPPORTED
 func _set_vars(value: Dictionary[String, Value]):
 	printerr("Do not access variables in variable store directly - Use `set_value` function")
+	print_stack()

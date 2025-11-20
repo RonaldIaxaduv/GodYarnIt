@@ -330,6 +330,7 @@ func add_instruction(op_bytecode: int, compiled_node: CompiledYarnNode = _curren
 
 	if compiled_node == null:
 		printerr("trying to emit to null node with byte code: %s" % op_bytecode)
+		print_stack()
 		error = ERR_INVALID_PARAMETER
 		return
 	compiled_node.instructions.append(instruction)
@@ -372,6 +373,7 @@ func compile_statement(node: CompiledYarnNode, statement: YarnParser.Statement) 
 		_:
 			error = ERR_COMPILATION_FAILED
 			printerr("Compiler.compile_statement: illegal statement type [%s] - could not generate code" % statement.type)
+			print_stack()
 
 ## Compiles the instructions for a block.
 ## Blocks are a group of statements.
@@ -615,6 +617,7 @@ func compile_assignment(node: CompiledYarnNode, assignment: YarnParser.Assignmen
 					assignment.operation_type,
 					node.node_name
 				])
+				print_stack()
 				error = ERR_INVALID_DATA
 
 	# stack contains destination value
@@ -647,6 +650,7 @@ func compile_expression(node: CompiledYarnNode, expression: YarnParser.Expressio
 				expression.expression_type,
 				node.node_name
 			])
+			print_stack()
 			error = ERR_INVALID_DATA
 
 	pass
@@ -676,6 +680,7 @@ func compile_value(node: CompiledYarnNode, value_node: YarnParser.ValueNode):
 				value_node.value.type,
 				node.node_name
 			])
+			print_stack()
 			error = ERR_INVALID_DATA
 
 

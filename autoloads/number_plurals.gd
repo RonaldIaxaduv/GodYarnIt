@@ -159,7 +159,8 @@ func get_plural_case(locale: String, value: float) -> int:
 		_:
 			pass
 	
-	printerr("Unrecognised locale in get_plural_case in NumberPlurals.")
+	printerr("Unrecognised locale in get_plural_case in NumberPlurals: " + locale.to_lower())
+	print_stack()
 	return PluralCase.NoPluralisation
 
 

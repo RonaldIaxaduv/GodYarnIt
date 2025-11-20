@@ -71,6 +71,8 @@ func pop_token(origin_node_name: String = "") -> Lexer.Token:
 	else:
 		# no front token remaining -> unexpected error!
 		printerr("Parser.pop_token: unexpected end of input%s" % [" for " + origin_node_name if origin_node_name != "" else ""])
+		if origin_node_name == "":
+			print_stack()
 		error = ERR_INVALID_DATA
 		return null
 
@@ -104,6 +106,7 @@ func try_pop_token_type(expected_token_types: Array[int] = [], origin_node_name:
 			]
 		)
 	)
+	print_stack()
 	error = ERR_INVALID_DATA
 	return null
 
@@ -120,6 +123,7 @@ func get_tokens() -> Array[Lexer.Token]:
 ## A (tree) node containing a line number and tags as well as some useful methods.
 ##
 ## A (tree) node containing a line number and tags as well as some useful methods.
+@abstract
 class ParseNode:
 	var parent: ParseNode
 	var node_line_number: int ## equal to the line number of the frontmost token when this node was created
@@ -142,16 +146,8 @@ class ParseNode:
 
 		tags = []
 
-	## Not implemented.
-	func get_tree_string(indentLevel: int) -> String:
-		printerr("ParseNode: tried to call unimplemented method get_tree_string.")
-		return "NotImplemented"
-
-	## Not implemented.
-	func tags_to_string(indentLevel: int) -> String:
-		printerr("ParseNode: tried to call unimplemented method tags_to_string.")
-		return "%s" % "TAGS<tags_to_string>NOTIMPLEMENTED"
-
+	@abstract
+	func get_tree_string(indentLevel: int) -> String
 
 	func get_location_string() -> String:
 		return "@[line:%d]" % [source_code_line_number + 1] # source line numbers should begin with 1
@@ -187,6 +183,7 @@ class ParseNode:
 ## TODO UNIMPLEMENTED.
 ## might be worth handling this through the parser instead as a pre-process step
 ## we handle header information before we begin parsing content
+@abstract
 class Header:
 	extends ParseNode
 	pass
@@ -312,11 +309,11 @@ class Statement:
 			statement_type = Type.Command
 		elif LineNode.can_parse(parser):
 			if parser.enable_logs: print("Statement: parsing text")
-			# line = parser.try_pop_token_type([YarnGlobals.TokenType.Text]).value
-			# statement_type = Type.Line
+			#line = parser.try_pop_token_type([YarnGlobals.TokenType.Text]).value
+			#statement_type = Type.Line
 			line = LineNode.new(self, parser)
 			statement_type = Type.Line
-			# parser.try_pop_token_type([YarnGlobals.TokenType.EndOfLine])
+			#parser.try_pop_token_type([YarnGlobals.TokenType.EndOfLine])
 		else:
 			printerr("Statement._init: expected a statement but got %s instead. (Is there an incomplete if statement perhaps?) %s" % [
 				parser.get_tokens().front()._to_string(),
@@ -559,7 +556,7 @@ class IfStatement:
 			info.append(clause.get_tree_string(indent_level))
 
 		return String("").join(info)
-
+	
 	static func can_parse(parser: YarnParser) -> bool:
 		return parser.next_tokens_are(
 			[YarnGlobals.TokenType.BeginCommand, YarnGlobals.TokenType.IfToken]
@@ -888,7 +885,7 @@ class FormatFunction:
 
 			if not has_advanced:
 				printerr("FormatFunction._init: parser couldn't advance while parsing the insides of a format function! %s" % [get_location_string()])
-
+		
 		if parser.error != OK:
 			printerr("FormatFunction._init: an error occurred while parsing the format function -> aborted.")
 			return
@@ -1529,6 +1526,7 @@ class ExpressionNode:
 				token_type,
 				operator_stack.front().line_number if operator_stack.size() > 0 else -1
 			])
+			print_stack()
 			return false
 		var operation_type: int = token_type
 
@@ -1655,6 +1653,7 @@ class Operator:
 	static func get_op_info(op_type: int) -> OperatorInfo:
 		if not Operator.is_op(op_type):
 			printerr("Operator.get_op_info: %s is not a valid operator" % YarnGlobals.get_token_type_name(op_type))
+			print_stack()
 			return null
 
 		#determine associativity and operands
@@ -1680,6 +1679,7 @@ class Operator:
 				return OperatorInfo.new(OperatorInfo.Associativity.Left, 2, 2)
 			_:
 				printerr("Operator.get_op_info: unknown or unimplemented operator %s" % YarnGlobals.get_token_type_name(op_type))
+				print_stack()
 
 		return null
 

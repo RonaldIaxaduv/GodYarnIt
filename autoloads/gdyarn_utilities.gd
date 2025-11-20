@@ -32,7 +32,7 @@ static func tag_untagged_lines(sources: Dictionary[String, String], tags: Dictio
 		var changed: bool = false
 
 		var file_lines: PackedStringArray = source.split("\n", true)
-		# printerr("source lines %s" % file_lines.size())
+		#printerr("source lines %s" % file_lines.size())
 		for i in range(file_lines.size()):
 			file_lines[i] = file_lines[i].strip_edges(false, true)
 
@@ -90,7 +90,7 @@ static func get_tags_from_sources(sources: Dictionary[String, String]) -> Dictio
 		var line_number: int = 0
 
 		var file_lines: PackedStringArray = source.split("\n", true)
-		# printerr("source lines %s" % file_lines.size())
+		#printerr("source lines %s" % file_lines.size())
 		for i in range(file_lines.size()):
 			file_lines[i] = file_lines[i].strip_edges(false, true)
 
@@ -104,7 +104,8 @@ static func get_tags_from_sources(sources: Dictionary[String, String]) -> Dictio
 			while line_number < file_lines.size() && file_lines[line_number] != "===":
 				var tag : String = get_line_tag(file_lines[line_number])
 				if lineTags.has(tag):
-					printerr("duplicate line tag[%s] in file[%s] and file[%s]" % [tag, source_key, lineTags[tag]])
+					printerr("duplicate line tag [%s] in file [%s] and file [%s]" % [tag, source_key, lineTags[tag]])
+					print_stack()
 					return {
 						"error":
 						(

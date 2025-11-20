@@ -257,11 +257,12 @@ func expand_format_functions(input: String, locale: String, enable_logs: bool) -
 					"[" + segment + "]", "<" + function_result.error + ">"
 				)
 				printerr("ExecutionStates.expand_format_functions: faulty format function: %s -> %s" % [segment, function_result.error])
+				print_stack()
 				continue
 
 			var pcase : String = ""
 			# here we use our pluralisation library to get the correct results
-			# printerr("functionName = %s value=[%s] , locale=[%s]" % [function_result.function_name, function_result.variable_value, locale])
+			#printerr("functionName = %s value=[%s] , locale=[%s]" % [function_result.function_name, function_result.variable_value, locale])
 			match function_result.function_name:
 				"select":
 					if enable_logs:
@@ -347,7 +348,8 @@ func parse_function(segment: String) -> FormatFunctionData:
 	# first value in the values regex is our function value
 	# this means that map_regex should return values_regex.size()-1
 	if maps.size() != values.size() - 1:
-		printerr("Mismatched parameters! input: ", segment, " params:", maps.size(), " values:", values.size())
+		printerr("Mismatched parameters! input: ", segment, " params: ", maps.size(), " values: ", values.size())
+		print_stack()
 		return format_function_data._error("Mismatched parameters")
 
 	format_function_data.function_name = function_validator.get_string()

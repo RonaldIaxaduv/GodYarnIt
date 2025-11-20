@@ -62,8 +62,8 @@ var name_plate_regex: RegEx
 var config: Configuration = Configuration.new() ## Holds some variables that shouldn't be exposed to the outside.
 
 var yarn_runner: YarnRunner ## The yarn runner that this GUI communicates with.
-var text_display ## Any node that has a set_text method, especially RichTextBox and Label. Used for displaying dialogue text.
-var name_plate_display ## Any node that has a set_text method. Used for displaying the speaker's name.
+var text_display: Control ## Any node that has a set_text method, especially RichTextBox and Label. Used for displaying dialogue text.
+var name_plate_display: Control ## Any node that has a set_text method. Used for displaying the speaker's name.
 var option_displays: Array ## Array of any nodes that have a set_text method. Used for displaying shortcut options and dialog options with displayed text. If they're buttons, they're automatically bound to a Callable.
 
 var next_line: String = "" ## holds the next line queued up to be displayed.
@@ -229,6 +229,7 @@ func clear_text():
 			text_display.clear()
 		else:
 			text_display.set_text("")
+			
 		text_display.queue_redraw()
 
 
@@ -391,6 +392,8 @@ func _update_text_display_path():
 		elif not text_display.has_method("set_text"):
 			printerr("YarnGUI: _text_display_path for the Yarn GUI did not point to a node with a set_text method. No text will be displayed.")
 			config.has_unknown_output_type = true
+		text_display.set_accessibility_name("Dialogue box")
+		text_display.set_accessibility_description("Displays dialogue")
 
 
 ## Setter method of [member _name_plate_display_path].
@@ -407,6 +410,9 @@ func _update_name_plate_display_path():
 	elif !name_plate_display.has_method("set_text"):
 		printerr("YarnGUI: name plate couldn't be set: _name_plate_display_path must point to a node with a set_text method!")
 		name_plate_display = null
+	
+	name_plate_display.set_accessibility_name("Dialogue nameplate label")
+	name_plate_display.set_accessibility_description("Displays speaker of the currently displayed dialogue")
 
 
 ## Setter method of [member _option_display_paths].
@@ -440,6 +446,9 @@ func _update_option_display_paths():
 			option_displays.pop_back()
 		else:
 			option_displays.back().pressed.connect(Callable(self, "select_option").bindv([option_displays.size() - 1]))
+		
+		option_displays.back().set_accessibility_name("Dialogue option button")
+		option_displays.back().set_accessibility_description("Displays a button to make a decision in the displayed dialogue")
 	
 	if enable_logs:
 		print("Yarn GUI's options array has been populated with %d elements.\n

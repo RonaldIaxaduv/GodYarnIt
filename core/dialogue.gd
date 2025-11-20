@@ -72,6 +72,7 @@ func dlog(source_method: String, message: String):
 ## Prints an error message. Used for [member _err_log].
 func elog(source_method: String, message: String):
 	printerr("%s: %s" % [source_method, message])
+	#print_stack()
 
 
 ## Returns true if the virtual machine hasn't stopped yet.

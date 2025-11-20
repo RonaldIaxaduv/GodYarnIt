@@ -186,6 +186,7 @@ func resume() -> bool:
 func find_label_instruction_index(label: String) -> int:
 	if !_current_node.labels.has(label):
 		printerr("Unknown label: " + label)
+		print_stack()
 		return -1
 	return _current_node.labels[label]
 
@@ -346,6 +347,7 @@ func run_instruction(instruction: Instruction) -> bool:
 			execution_state = YarnGlobals.ExecutionState.Stopped
 			reset_state()
 			printerr("VirtualMachine.run_instruction: unknown instruction bytecode: %s " % instruction.operation)
+			print_stack()
 			return false
 
 	return true

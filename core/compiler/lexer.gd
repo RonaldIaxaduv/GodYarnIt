@@ -318,6 +318,7 @@ func tokenize_line(line: String, line_number: int) -> Array[Token]:
 	var _ok = whitespace.compile(WHITESPACE)
 	if _ok != OK:
 		printerr("unable to compile the whitespace regex")
+		print_stack()
 		error = ERR_COMPILATION_FAILED
 		return []
 
@@ -345,8 +346,9 @@ func tokenize_line(line: String, line_number: int) -> Array[Token]:
 				if token_stack.size() > 0:
 					while token_stack.front().token_type == YarnGlobals.TokenType.Identifier:
 						var t = token_stack.pop_front()
-						# if t.token_type == YarnGlobals.TokenType.Indent:
-						# printerr("popped off some indentation")
+						#if t.token_type == YarnGlobals.TokenType.Indent:
+						#	printerr("popped off some indentation")
+						#	print_stack()
 
 					var start_delimit_token: Token = token_stack.front()
 					start_index = start_delimit_token.offset
@@ -524,6 +526,7 @@ class LexerState:
 	func add_text_rule(token_type: int, target_state: String = "") -> Rule:
 		if contains_text_rule():
 			printerr("State already contains Text rule")
+			print_stack()
 			return null
 
 		var delimiters: PackedStringArray = []

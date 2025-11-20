@@ -37,6 +37,7 @@ func set_dir(value: String) -> void:
 			_compiled_program_directory += "/"
 	else:
 		printerr("Directory does not exist : %s" % value)
+		print_stack()
 
 
 ## Sets the name of the compiled yarn program.
