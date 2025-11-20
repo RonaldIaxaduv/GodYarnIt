@@ -10,7 +10,7 @@
 ##        * when ui is hidden
 ##        * when options are shown
 ##        * when options are hidden
-@icon("res://addons/godyarnit/assets/display.PNG")
+@icon("uid://csedigeikjpkr") # display.PNG
 class_name YarnDisplay
 extends Control
 

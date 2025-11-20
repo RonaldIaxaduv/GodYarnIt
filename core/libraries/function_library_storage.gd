@@ -1,4 +1,4 @@
-@icon("res://addons/godyarnit/assets/function_library_storage.png")
+@icon("uid://7psitsfyqb0e") # function_library_storage.png
 class_name FunctionLibraryStorage
 extends Node
 

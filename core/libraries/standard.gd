@@ -1,9 +1,10 @@
 ## Subclass of library.gd containing some basic operations, like addition etc.
 ##
 ## 
-extends "res://addons/godyarnit/core/libraries/library.gd"
+extends Library
 
 
+const Library = preload("uid://xldo1yiurv4o") # library.gd
 const Value = preload("uid://dtwoppax6efli") # value.gd
 
 

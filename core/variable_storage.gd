@@ -5,7 +5,7 @@
 ## TODO: Implement methods to make these variables persistent across
 ##		 different scenes. ([method convert_to_string_data] and [method populate_from_string_data]
 ##		 provided for this purpose.)
-@icon("res://addons/godyarnit/assets/storage.png")
+@icon("uid://c2b3c1dlwg3wq") # storage.png
 class_name YarnVariableStorage
 extends Node
 

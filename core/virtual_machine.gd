@@ -8,7 +8,6 @@
 extends Object
 
 signal resumed
-# var YarnGlobals = load("res://addons/godyarnit/autoloads/execution_states.gd")
 
 const EXECUTION_COMPLETE: String = "execution_complete_command"
 const YarnDialogue = preload("uid://drr5ppbp71mew") # dialogue.gd
@@ -498,8 +497,6 @@ func _pop_resolved_value() -> Value:
 ## Contains the name of the current node, the number of programs,
 ## a list of current options and a stack of values.
 class VmState:
-	#var Value = load("res://addons/godyarnit/core/value.gd")
-
 	var current_node_name: String
 	var program_instruction_index: int = 0 ## index of the instruction which will be executed next
 	var current_options: Array[OptionEntry] = []

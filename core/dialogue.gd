@@ -41,8 +41,6 @@ func _init(variable_storage: YarnVariableStorage, function_library_storage: Func
 	if !_variable_storage:
 		printerr("Passed variable storage during dialogue initialisation was null!")
 	_vm = VirtualMachine.new(self)
-	#var YarnLibrary = load("res://addons/godyarnit/core/libraries/library.gd")
-	#var _variable_storage
 	library = YarnLibrary.new()
 	_debug_log = Callable(self, "dlog")
 	_err_log = Callable(self, "elog")
@@ -50,7 +48,7 @@ func _init(variable_storage: YarnVariableStorage, function_library_storage: Func
 
 	# import the standard library
 	# this contains math constants, operations and checks
-	var StandardLibrary = load("res://addons/godyarnit/core/libraries/standard.gd")
+	var StandardLibrary = load("uid://cx8heifc6uepj") # standard.gd
 	library.import_library(StandardLibrary.new())
 	
 	#add a function to lib that checks if node is visited
